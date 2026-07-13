@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TransBus — Acceso al Sistema</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: #0F1923;
+        }
+
+        /* Panel izquierdo */
+        .left {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            overflow: hidden;
+        }
+
+        .left-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(135deg, #1E3A5F 0%, #0F1923 60%),
+                radial-gradient(circle at 70% 30%, rgba(246,173,43,0.12) 0%, transparent 50%);
+        }
+
+        .left-pattern {
+            position: absolute;
+            inset: 0;
+            opacity: 0.04;
+            background-image: repeating-linear-gradient(
+                0deg, transparent, transparent 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 41px
+            ), repeating-linear-gradient(
+                90deg, transparent, transparent 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 41px
+            );
+        }
+
+        .left-content { position: relative; z-index: 1; }
+
+        .company-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(246,173,43,0.15);
+            border: 1px solid rgba(246,173,43,0.3);
+            color: #F6AD2B;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 20px;
+            margin-bottom: 32px;
+        }
+
+        .hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(38px, 4.5vw, 60px);
+            font-weight: 800;
+            color: white;
+            line-height: 1.05;
+            margin-bottom: 20px;
+        }
+
+        .hero-title .accent { color: #F6AD2B; }
+
+        .hero-sub {
+            font-size: 15px;
+            color: rgba(255,255,255,0.45);
+            line-height: 1.7;
+            max-width: 400px;
+            margin-bottom: 48px;
+        }
+
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.55);
+        }
+
+        .feature-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #F6AD2B;
+            flex-shrink: 0;
+        }
+
+        .left-footer {
+            position: absolute;
+            bottom: 32px;
+            left: 60px;
+            right: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .left-footer-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        /* Panel derecho */
+        .right {
+            width: 460px;
+            background: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 52px 48px;
+            position: relative;
+        }
+
+        .right::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #F6AD2B 0%, #2C5282 100%);
+        }
+
+        .right-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: #1E3A5F;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .logo-text h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1A202C;
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 1px;
+        }
+
+        .right-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #1A202C;
+            margin-bottom: 6px;
+        }
+
+        .right-sub {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 32px;
+        }
+
+        .form-group { margin-bottom: 18px; }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4A5568;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .input-wrapper { position: relative; }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 15px;
+            color: #A0AEC0;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 11px 14px 11px 38px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #1A202C;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3182CE;
+            box-shadow: 0 0 0 3px rgba(49,130,206,0.10);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: #1E3A5F;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            margin-top: 6px;
+            letter-spacing: 0.02em;
+        }
+
+        .btn-login:hover { background: #2C5282; transform: translateY(-1px); }
+        .btn-login:active { transform: translateY(0); }
+
+        .alert-error {
+            background: #FED7D7;
+            color: #742A2A;
+            padding: 11px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .security-note {
+            margin-top: 28px;
+            padding: 14px;
+            background: #F7F8FA;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .security-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+
+        .security-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        .security-item:last-child { margin-bottom: 0; }
+        .security-dot { color: #38A169; font-size: 10px; }
+
+        .right-footer {
+            position: absolute;
+            bottom: 24px;
+            left: 48px;
+            right: 48px;
+            text-align: center;
+            font-size: 11px;
+            color: #A0AEC0;
+        }
+
+        @media (max-width: 900px) {
+            .left { display: none; }
+            .right { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="left">
+    <div class="left-bg"></div>
+    <div class="left-pattern"></div>
+    <div class="left-content">
+        <div class="company-tag">🚌 Sistema de Gestión Empresarial</div>
+        <h1 class="hero-title">
+            Gestión<br>
+            Integral de<br>
+            <span class="accent">Transporte</span>
+        </h1>
+        <p class="hero-sub">
+            Plataforma centralizada para la administración de terminales,
+            flotas y operaciones de la empresa de buses.
+        </p>
+        <div class="features">
+            <div class="feature">
+                <div class="feature-dot"></div>
+                Control en tiempo real de terminales y buses
+            </div>
+            <div class="feature">
+                <div class="feature-dot"></div>
+                Gestión de flota y estados de vehículos
+            </div>
+            <div class="feature">
+                <div class="feature-dot"></div>
+                Acceso seguro para personal autorizado
+            </div>
+            <div class="feature">
+                <div class="feature-dot"></div>
+                Reportes y estadísticas operacionales
+            </div>
+        </div>
+    </div>
+    <div class="left-footer">
+        <span class="left-footer-text">© 2026 TransBus. Todos los derechos reservados.</span>
+        <span class="left-footer-text">v1.0.0</span>
+    </div>
+</div>
+
+<div class="right">
+    <div class="right-logo">
+        <div class="logo-icon">🚌</div>
+        <div class="logo-text">
+            <h2>TransBus</h2>
+            <p>Panel Administrativo</p>
+        </div>
+    </div>
+
+    <h2 class="right-title">Iniciar Sesión</h2>
+    <p class="right-sub">Acceso exclusivo para personal autorizado</p>
+
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert-error">⚠️ {{ msg }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Usuario</label>
+            <div class="input-wrapper">
+                <span class="input-icon">👤</span>
+                <input type="text" name="username" placeholder="Nombre de usuario" autocomplete="username">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Contrasena</label>
+            <div class="input-wrapper">
+                <span class="input-icon">🔒</span>
+                <input type="password" name="password" placeholder="Contrasena de acceso" autocomplete="current-password">
+            </div>
+        </div>
+        <button type="submit" class="btn-login">Ingresar al Sistema →</button>
+    </form>
+
+    <div class="security-note">
+        <div class="security-title">🔐 Medidas de Seguridad Activas</div>
+        <div class="security-item"><span class="security-dot">●</span> Sesion expira tras 1 minutos de inactividad</div>
+        <div class="security-item"><span class="security-dot">●</span> Conexion protegida con CSRF</div>
+        <div class="security-item"><span class="security-dot">●</span> Contrasenas cifradas con hash seguro</div>
+        <div class="security-item"><span class="security-dot">●</span> Acceso restringido por rol de usuario</div>
+    </div>
+
+    <div class="right-footer">
+        Si tienes problemas para acceder, contacta al administrador del sistema.
+    </div>
+</div>
+
+</body>
+</html>

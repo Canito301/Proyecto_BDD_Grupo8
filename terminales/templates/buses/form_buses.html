@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} — TransBus{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'lista_buses' %}" class="btn btn-ghost">← Volver</a>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:600px;">
+    <div class="card-title" style="margin-bottom:24px;">🚌 {{ titulo }}</div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Patente</label>
+                {{ form.patente }}
+                {% if form.patente.errors %}
+                <p class="form-error">{{ form.patente.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label>Accesibilidad Universal</label>                <!--Aqui es donde hay que cambiar en los otros, osea todo--> 
+                {{ form.accesibilidad_universal }}
+            </div>
+            <div class="form-group">
+                <label>Kilometraje</label>
+                {{ form.kilometraje }}
+            </div>
+            <div class="form-group">
+                <label>Modelo</label>
+                {{ form.modelo }}
+            </div>
+            <div class="form-group">
+                <label>Año de Fabricacion</label>
+                {{ form.anio }}
+            </div>
+            <div class="form-group">
+                <label>Capacidad de Pasajeros</label>
+                {{ form.capacidad }}
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Terminal Actual</label>
+            {{ form.id_terminal }}
+        </div>
+        <div class="form-group">
+            <label>Ultimo Mantenimiento</label>
+            {{ form.fecha_ultimo_mantenimiento }}
+        </div>
+        <div style="display:flex; gap:10px; margin-top:8px;">
+            <button type="submit" class="btn btn-primary" style="flex:1;">Guardar →</button>
+            <a href="{% url 'lista_buses' %}" class="btn btn-ghost">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

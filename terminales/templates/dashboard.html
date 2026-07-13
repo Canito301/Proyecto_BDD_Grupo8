@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — TransBus{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'crear_terminal' %}" class="btn btn-acento">+ Nuevo Terminal</a>
+<a href="{% url 'crear_bus' %}" class="btn btn-ghost">+ Registrar Bus</a>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">🏢</div>
+        <div>
+            <div class="stat-value">{{ total_terminales }}</div>
+            <div class="stat-label">Terminales Activos</div>
+        </div>
+    </div>
+    <div class="stat-card amarillo">
+        <div class="stat-icon">🚌</div>
+        <div>
+            <div class="stat-value">{{ total_buses }}</div>
+            <div class="stat-label">Total de Buses</div>
+        </div>
+    </div>
+    <div class="stat-card verde">
+        <div class="stat-icon">🛣️</div>
+        <div>
+            <div class="stat-value">{{ buses_en_ruta }}</div>
+            <div class="stat-label">Buses en Ruta</div>
+        </div>
+    </div>
+    <div class="stat-card rojo">
+        <div class="stat-icon">🔧</div>
+        <div>
+            <div class="stat-value">{{ buses_mantenimiento }}</div>
+            <div class="stat-label">En Mantenimiento</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">🏢 Terminales Recientes</div>
+        <a href="{% url 'lista_terminales' %}" class="btn btn-ghost btn-sm">Ver todos →</a>
+    </div>
+    {% if terminales_recientes %}
+    <table>
+        <thead>
+            <tr>
+                <th>Terminal</th>
+                <th>Ciudad</th>
+                <th>Buses en Terminal</th>
+                <th>Administrador</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in terminales_recientes %}
+        <tr>
+            <td><strong>{{ t.nombre }}</strong></td>
+            <td>{{ t.ciudad }}</td>
+            <td><span class="badge badge-azul">{{ t.cantidad_buses }} buses</span></td>
+            <td>{{ t.administrador.get_full_name|default:"Sin asignar" }}</td>
+            <td>
+                <a href="{% url 'detalle_terminal' t.pk %}" class="btn btn-ghost btn-sm">Ver detalle</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">🏢</div>
+        <p>No hay terminales registrados. <a href="{% url 'crear_terminal' %}">Crear primero</a></p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

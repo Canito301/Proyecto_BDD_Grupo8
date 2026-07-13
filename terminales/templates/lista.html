@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Terminales — TransBus{% endblock %}
+{% block page_title %}Terminales{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'crear_terminal' %}" class="btn btn-acento">+ Nuevo Terminal</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="get" class="search-bar">
+        <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre, ciudad o dirección...">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        {% if q %}<a href="{% url 'lista_terminales' %}" class="btn btn-ghost">Limpiar</a>{% endif %}
+    </form>
+
+    {% if terminales %}
+    <table>
+        <thead>
+            <tr>
+                <th>Terminal</th>
+                <th>Ciudad</th>
+                <th>Direccion</th>
+                <th>Buses Presentes</th>
+                <th>Administrador</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in terminales %}
+        <tr>
+            <td><strong>{{ t.nombre }}</strong></td>
+            <td>{{ t.ciudad }}</td>
+            <td style="color:#718096; font-size:13px;">{{ t.direccion }}</td>
+            <td>
+                <span class="badge badge-azul">{{ t.cantidad_buses }} en terminal</span>
+            </td>
+            <td>{{ t.administrador.get_full_name|default:"—" }}</td>
+            <td style="display:flex; gap:6px;">
+                <a href="{% url 'detalle_terminal' t.pk %}" class="btn btn-ghost btn-sm">Ver</a>
+                <a href="{% url 'editar_terminal' t.pk %}" class="btn btn-primary btn-sm">Editar</a>
+                {% if user.rol == 'superadmin' or user.is_superuser %}
+                <a href="{% url 'eliminar_terminal' t.pk %}" class="btn btn-danger btn-sm"
+                   onclick="return confirm('¿Desactivar terminal {{ t.nombre }}?')">Desactivar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">🏢</div>
+        <p>No se encontraron terminales{% if q %} para "{{ q }}"{% endif %}.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

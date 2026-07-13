@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TransBus — Panel de Gestión{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul: #1E3A5F;
+            --azul-medio: #2C5282;
+            --azul-claro: #3182CE;
+            --acento: #F6AD2B;
+            --acento-hover: #D69E2E;
+            --fondo: #F7F8FA;
+            --blanco: #FFFFFF;
+            --gris-100: #EDF2F7;
+            --gris-200: #E2E8F0;
+            --gris-400: #A0AEC0;
+            --gris-600: #718096;
+            --gris-800: #2D3748;
+            --negro: #1A202C;
+            --verde: #38A169;
+            --rojo: #E53E3E;
+            --amarillo: #D69E2E;
+            --sombra: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+            --sombra-md: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--fondo);
+            color: var(--negro);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 260px;
+            background: var(--azul);
+            min-height: 100vh;
+            position: fixed;
+            top: 0; left: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--acento);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .brand-text h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.1;
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            color: rgba(255,255,255,0.45);
+            margin-top: 2px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 12px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            padding: 0 10px;
+            margin-bottom: 6px;
+            margin-top: 16px;
+        }
+
+        .nav-section-label:first-child { margin-top: 0; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            transition: all 0.15s;
+            margin-bottom: 2px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.10);
+            color: white;
+        }
+
+        .nav-link.active { font-weight: 500; }
+
+        .nav-icon { width: 20px; text-align: center; font-size: 15px; }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--azul-claro);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-info { flex: 1; min-width: 0; }
+        .user-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-role { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+        .btn-logout {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.15s;
+            text-decoration: none;
+        }
+        .btn-logout:hover { color: var(--acento); }
+
+        /* ── Main ── */
+        .main {
+            margin-left: 260px;
+            flex: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: white;
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--gris-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 19px;
+            font-weight: 600;
+            color: var(--negro);
+        }
+
+        .topbar-right { display: flex; gap: 8px; align-items: center; }
+
+        .content { padding: 28px 32px; flex: 1; }
+
+        /* ── Componentes ── */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--sombra);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--negro);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 24px;
+            box-shadow: var(--sombra);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-left: 4px solid var(--azul-claro);
+        }
+
+        .stat-card.amarillo { border-left-color: var(--acento); }
+        .stat-card.verde { border-left-color: var(--verde); }
+        .stat-card.rojo { border-left-color: var(--rojo); }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: var(--gris-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--negro);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gris-600);
+            margin-top: 3px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--azul-claro);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--azul-medio); }
+
+        .btn-acento {
+            background: var(--acento);
+            color: var(--negro);
+            font-weight: 600;
+        }
+        .btn-acento:hover { background: var(--acento-hover); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--gris-800);
+            border: 1px solid var(--gris-200);
+        }
+        .btn-ghost:hover { background: var(--gris-100); }
+
+        .btn-danger {
+            background: var(--rojo);
+            color: white;
+        }
+        .btn-danger:hover { opacity: 0.88; }
+
+        .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead th {
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--gris-600);
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--gris-200);
+            background: var(--gris-100);
+        }
+
+        thead th:first-child { border-radius: 8px 0 0 0; }
+        thead th:last-child { border-radius: 0 8px 0 0; }
+
+        tbody tr {
+            border-bottom: 1px solid var(--gris-200);
+            transition: background 0.1s;
+        }
+
+        tbody tr:hover { background: var(--fondo); }
+        tbody tr:last-child { border-bottom: none; }
+
+        tbody td {
+            padding: 13px 14px;
+            font-size: 14px;
+            color: var(--negro);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-verde { background: #C6F6D5; color: #276749; }
+        .badge-azul { background: #BEE3F8; color: #2C5282; }
+        .badge-amarillo { background: #FEFCBF; color: #744210; }
+        .badge-rojo { background: #FED7D7; color: #742A2A; }
+        .badge-gris { background: var(--gris-200); color: var(--gris-800); }
+
+        .form-group { margin-bottom: 18px; }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gris-800);
+            margin-bottom: 6px;
+            letter-spacing: 0.03em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 13px;
+            border: 1.5px solid var(--gris-200);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--negro);
+            background: white;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--azul-claro);
+            box-shadow: 0 0 0 3px rgba(49,130,206,0.12);
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .form-error {
+            font-size: 12px;
+            color: var(--rojo);
+            margin-top: 4px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-success { background: #C6F6D5; color: #276749; }
+        .alert-error { background: #FED7D7; color: #742A2A; }
+        .alert-info { background: #BEE3F8; color: #2C5282; }
+
+        .search-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 9px 14px;
+            border: 1.5px solid var(--gris-200);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--azul-claro);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: var(--gris-400);
+        }
+
+        .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--gris-600);
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb a { color: var(--azul-claro); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb span { color: var(--gris-400); }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🚌</div>
+            <div class="brand-text">
+                <h1>TransBus</h1>
+                <p>Panel de Gestión</p>
+            </div>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">General</div>
+        <a href="{% url 'dashboard' %}" class="nav-link">
+            <span class="nav-icon">📊</span> Dashboard
+        </a>
+
+        <div class="nav-section-label">Operaciones</div>
+        <a href="{% url 'lista_terminales' %}" class="nav-link">
+            <span class="nav-icon">🏢</span> Terminales
+        </a>
+        <a href="{% url 'lista_buses' %}" class="nav-link">
+            <span class="nav-icon">🚌</span> Buses
+        </a>
+
+        {% if user.is_superuser %}
+        <div class="nav-section-label">Administracion</div>
+        <a href="/admin/" class="nav-link">
+            <span class="nav-icon">⚙️</span> Panel Admin
+        </a>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+            <div class="user-info">
+                <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+                <div class="user-role">{{ user.get_rol_display }}</div>
+            </div>
+            <a href="{% url 'logout' %}" class="btn-logout" title="Cerrar sesion">⏏</a>
+        </div>
+    </div>
+</aside>
+{% endif %}
+
+<main class="main">
+    {% if user.is_authenticated %}
+    <div class="topbar">
+        <h2 class="page-title">{% block page_title %}Dashboard{% endblock %}</h2>
+        <div class="topbar-right">{% block topbar_actions %}{% endblock %}</div>
+    </div>
+    {% endif %}
+
+    <div class="content">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% else %}alert-info{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

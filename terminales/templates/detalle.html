@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}{{ terminal.nombre }} — TransBus{% endblock %}
+{% block page_title %}{{ terminal.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'editar_terminal' terminal.pk %}" class="btn btn-primary">✏️ Editar</a>
+<a href="{% url 'lista_terminales' %}" class="btn btn-ghost">← Volver</a>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'lista_terminales' %}">Terminales</a>
+    <span>/</span>
+    <span>{{ terminal.nombre }}</span>
+</div>
+
+<!-- Info del terminal -->
+<div style="display:grid; grid-template-columns: 2fr 1fr; gap:16px; margin-bottom:20px;">
+    <div class="card">
+        <div class="card-title" style="margin-bottom:16px;">📋 Informacion del Terminal</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div>
+                <div style="font-size:11px; font-weight:600; color:#718096; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Ciudad</div>
+                <div style="font-size:15px; font-weight:500;">{{ terminal.ciudad }}</div>
+            </div>
+            <div>
+                <div style="font-size:11px; font-weight:600; color:#718096; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Direccion</div>
+                <div style="font-size:15px; font-weight:500;">{{ terminal.direccion }}</div>
+            </div>
+            <div>
+                <div style="font-size:11px; font-weight:600; color:#718096; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Telefono</div>
+                <div style="font-size:15px; font-weight:500;">{{ terminal.telefono|default:"No registrado" }}</div>
+            </div>
+            <div>
+                <div style="font-size:11px; font-weight:600; color:#718096; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Administrador a Cargo</div>
+                <div style="font-size:15px; font-weight:500;">{{ terminal.administrador.get_full_name|default:"Sin asignar" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats buses -->
+    <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="stat-card" style="margin:0;">
+            <div class="stat-icon">🟢</div>
+            <div>
+                <div class="stat-value">{{ buses_por_estado.en_terminal }}</div>
+                <div class="stat-label">En Terminal</div>
+            </div>
+        </div>
+        <div class="stat-card verde" style="margin:0;">
+            <div class="stat-icon">🛣️</div>
+            <div>
+                <div class="stat-value">{{ buses_por_estado.en_ruta }}</div>
+                <div class="stat-label">En Ruta</div>
+            </div>
+        </div>
+        <div class="stat-card rojo" style="margin:0;">
+            <div class="stat-icon">🔧</div>
+            <div>
+                <div class="stat-value">{{ buses_por_estado.mantenimiento }}</div>
+                <div class="stat-label">Mantenimiento</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Buses del terminal -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">🚌 Buses Asociados a este Terminal</div>
+        <a href="{% url 'crear_bus' %}" class="btn btn-ghost btn-sm">+ Registrar Bus</a>
+    </div>
+    {% if buses %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patente</th>
+                <th>Marca / Modelo</th>
+                <th>Año</th>
+                <th>Capacidad</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for bus in buses %}
+        <tr>
+            <td><strong>{{ bus.patente }}</strong></td>
+            <td>{{ bus.marca }} {{ bus.modelo }}</td>
+            <td>{{ bus.anio }}</td>
+            <td>{{ bus.capacidad }} pasajeros</td>
+            <td>
+                {% if bus.estado == 'en_terminal' %}
+                <span class="badge badge-azul">En Terminal</span>
+                {% elif bus.estado == 'en_ruta' %}
+                <span class="badge badge-verde">En Ruta</span>
+                {% elif bus.estado == 'mantenimiento' %}
+                <span class="badge badge-amarillo">Mantenimiento</span>
+                {% else %}
+                <span class="badge badge-rojo">Fuera de Servicio</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'editar_bus' bus.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">🚌</div>
+        <p>No hay buses registrados en este terminal.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

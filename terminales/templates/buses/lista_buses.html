@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Buses — TransBus{% endblock %}
+{% block page_title %}Flota de Buses{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'crear_bus' %}" class="btn btn-acento">+ Registrar Bus</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="get" style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+        <input type="text" name="q" value="{{ q }}"
+            placeholder="Buscar por patente, marca o modelo..."
+            style="flex:1; min-width:200px; padding:9px 14px; border:1.5px solid #E2E8F0; border-radius:8px; font-size:14px;">
+        <select name="estado" style="padding:9px 14px; border:1.5px solid #E2E8F0; border-radius:8px; font-size:14px;">
+            <option value="">Todos los estados</option>
+            {% for val, label in estados %}
+            <option value="{{ val }}" {% if estado == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        {% if q or estado %}
+        <a href="{% url 'buses/lista_buses' %}" class="btn btn-ghost">Limpiar</a>
+        {% endif %}
+    </form>
+
+    {% if buses %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patente</th>
+                <th>Kilometraje</th>
+                <th>Terminal Actual</th>
+                <th>Accesibilidad Universal</th>
+                <th>Ultimo Mant.</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for bus in buses %}
+        <tr>
+            <td><strong>{{ bus.patente }}</strong></td>
+            <td>{{ bus.kilometraje }} </strong></td>
+            <td>
+                {% if bus.id_terminal %}
+                    <span class="badge badge-azul">En {{ bus.id_terminal.nombre }}</span>
+                {% else %}
+                    <span class="badge badge-verde">En Ruta</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if bus.accesibilidad_universal %}
+                    <span class="badge badge-verde">Sí</span>
+                {% else %}
+                    <span class="badge badge-rojo">No</span>
+                {% endif %}
+            </td>
+
+            <td>{{ bus.terminal_actual.nombre|default:"—" }}</td>
+            <td style="font-size:13px; color:#718096;">
+                {{ bus.fecha_ultimo_mantenimiento|default:"No registrado" }}
+            </td>
+            <td>
+                <a href="{% url 'editar_bus' bus.pk %}" class="btn btn-ghost btn-sm">✏️ Editar</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">🚌</div>
+        <p>No se encontraron buses{% if q %} para "{{ q }}"{% endif %}.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
