@@ -53,13 +53,13 @@ WSGI_APPLICATION = 'empresa_buses.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'proyectobdd8def',
-        'USER': 'grupo8',
-        'PASSWORD': 'ProyectoBDD_8',
+        'NAME': 'empresa_buses',
+        'USER': 'postgres',
+        'PASSWORD': 'pass1234',
         'HOST': 'localhost',
         'PORT': '5432',
         'OPTIONS': {
-            'options': '-c search_path=empresa_buses,terminal_buses_sj,public'
+            'options': '-c search_path=empresa_buses,public'
         },
     }
 }
