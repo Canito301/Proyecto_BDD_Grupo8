@@ -7,6 +7,8 @@ from django.utils import timezone
 from .models import Usuario, Terminal, Bus, Viaje, Asiento
 from .forms import LoginForm, TerminalForm, BusForm
 from functools import wraps
+from .models import Usuario, Terminal, Bus, Viaje, Asiento, Reporte, Administrativo, BusReporte, ChoferReporte, Chofer
+from .forms import LoginForm, TerminalForm, BusForm, ReporteForm
 
 
 # ── Seguridad ─────────────────────────────────────────────────────────────────
@@ -309,3 +311,50 @@ def desvincular_bus(request, bus_id):
         Bus.objects.filter(pk=bus.pk).update(id_terminal=None)
         messages.success(request, f"Bus {bus.patente} desvinculado del terminal {nombre_terminal}.")
     return redirect('vincular_bus_terminal')
+
+
+
+
+@login_required
+def crear_reporte(request):
+    if request.method == 'POST':
+        form = ReporteForm(request.POST)
+        if form.is_valid():
+            try:
+                # 1. Buscar al administrativo
+                admin_bd = Administrativo.objects.filter(rut=request.user.rut).first()
+
+                # Malla de seguridad para superusuarios sin RUT en la tabla administrativo
+                if not admin_bd:
+                    admin_bd = Administrativo.objects.first()
+                    if not admin_bd:
+                        messages.error(request,
+                                       "Error: No hay administrativos en la Base de Datos para crear reportes.")
+                        return redirect('dashboard')
+
+                # 2. Crear el Reporte
+                nuevo_reporte = Reporte.objects.create(
+                    id_admin=admin_bd,
+                    tipo=form.cleaned_data['tipo'],
+                    descripcion=form.cleaned_data['descripcion']
+                )
+
+                # 3. Vincular Bus
+                bus = form.cleaned_data.get('id_bus')
+                if bus:
+                    BusReporte.objects.create(id_bus=bus, id_reporte=nuevo_reporte)
+
+                # 4. Vincular Chofer
+                chofer = form.cleaned_data.get('id_chofer')
+                if chofer:
+                    ChoferReporte.objects.create(id_reporte=nuevo_reporte, id_chofer=chofer)
+
+                messages.success(request, f"El reporte #{nuevo_reporte.id_reporte} ha sido registrado exitosamente.")
+                return redirect('dashboard')
+
+            except Exception as e:
+                messages.error(request, f"Hubo un error al guardar en la base de datos: {str(e)}")
+    else:
+        form = ReporteForm()
+
+    return render(request, 'crear_reporte.html', {'form': form})

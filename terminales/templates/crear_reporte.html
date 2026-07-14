@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Reporte — TransBus{% endblock %}
+{% block page_title %}Generar Nuevo Reporte Operativo{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header">
+        <h3 class="card-title">Detalles del Suceso</h3>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-grid" style="margin-bottom: 20px;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }}</label>
+                {{ form.tipo }}
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="{{ form.id_bus.id_for_label }}">{{ form.id_bus.label }}</label>
+                {{ form.id_bus }}
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="{{ form.id_chofer.id_for_label }}">{{ form.id_chofer.label }}</label>
+                {{ form.id_chofer }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.descripcion.id_for_label }}">{{ form.descripcion.label }}</label>
+            {{ form.descripcion }}
+            {% if form.descripcion.errors %}
+                <div class="form-error">{{ form.descripcion.errors|striptags }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px; border-top: 1px solid var(--gris-200); padding-top: 20px;">
+            <a href="{% url 'dashboard' %}" class="btn btn-ghost">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar Reporte</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

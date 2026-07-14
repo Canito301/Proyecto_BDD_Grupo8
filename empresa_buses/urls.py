@@ -32,4 +32,7 @@ urlpatterns = [
     # Vinculación Bus-Terminal
     path('buses/vincular/', views.vincular_bus_terminal, name='vincular_bus_terminal'),
     path('buses/<int:bus_id>/desvincular/', views.desvincular_bus, name='desvincular_bus'),
+
+    # Reportes (Requerimiento 3)
+    path('reportes/nuevo/', views.crear_reporte, name='crear_reporte'),
 ]

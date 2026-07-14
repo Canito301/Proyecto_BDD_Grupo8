@@ -1,5 +1,6 @@
 from django import forms
 from .models import Terminal, Bus, Usuario
+from .models import Terminal, Bus, Usuario, Chofer
 
 
 class LoginForm(forms.Form):
@@ -62,3 +63,44 @@ class BusForm(forms.ModelForm):
             # no tiene una columna llamada "activo". Si la agregas después, puedes descomentar el filtro.
             self.fields['id_terminal'].queryset = Terminal.objects.all()
             self.fields['id_terminal'].empty_label = "Sin terminal asignado (en ruta)"
+
+
+class ReporteForm(forms.Form):
+    TIPOS_REPORTE = [
+        ('Mecanico', 'Falla Mecánica'),
+        ('Incidente', 'Incidente / Accidente'),
+        ('Retraso', 'Retraso de Ruta'),
+        ('Personal', 'Problema de Personal'),
+        ('Otro', 'Otro'),
+    ]
+
+    tipo = forms.ChoiceField(
+        choices=TIPOS_REPORTE,
+        label='Tipo de Reporte'
+    )
+
+    descripcion = forms.CharField(
+        label='Descripción detallada',
+        widget=forms.Textarea(attrs={
+            'rows': 4,
+            'placeholder': 'Describa lo sucedido...',
+            'oninvalid': "this.setCustomValidity('Por favor, complete este campo.')",
+            'oninput': "this.setCustomValidity('')"
+        }),
+        required=True
+    )
+
+    # Campos Opcionales (Requerimiento 3)
+    id_bus = forms.ModelChoiceField(
+        queryset=Bus.objects.all(),
+        label='Bus Involucrado (Opcional)',
+        required=False,
+        empty_label="Ninguno"
+    )
+
+    id_chofer = forms.ModelChoiceField(
+        queryset=Chofer.objects.all(),
+        label='Chofer Involucrado (Opcional)',
+        required=False,
+        empty_label="Ninguno"
+    )
