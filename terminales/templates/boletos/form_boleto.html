@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} — TransBus{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">🎫 {{ titulo }}</h3>
+    </div>
+    <form method="post" style="padding: 20px;">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="form-group" style="margin-bottom: 14px;">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <span class="error-text" style="color:#c0392b; font-size:12px;">{{ field.errors|first }}</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary">Guardar Boleto</button>
+        <a href="{% url 'lista_boletos' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

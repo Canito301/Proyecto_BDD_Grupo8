@@ -144,3 +144,21 @@ class ChoferReporte(models.Model):
         db_table = 'chofer_reporte'
         managed = False
         unique_together = (('id_reporte', 'id_chofer'),)
+
+
+class Boleto(models.Model):
+    id_boleto = models.AutoField(primary_key=True)
+    fecha_hora_compra = models.DateTimeField(auto_now_add=True)
+    tipo_boleto = models.CharField(max_length=20)
+    num_asiento = models.IntegerField()
+    ciudad_inicial = models.CharField(max_length=100)
+    ciudad_final = models.CharField(max_length=100)
+    id_viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, db_column='id_viaje')
+
+    def __str__(self):
+        return f"Boleto #{self.id_boleto} — Asiento {self.num_asiento}"
+
+    class Meta:
+        db_table = 'boleto'
+        managed = False
+        ordering = ['-fecha_hora_compra']

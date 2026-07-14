@@ -45,4 +45,8 @@ urlpatterns = [
 
     # Reportes (Requerimiento 3)
     path('reportes/nuevo/', views.crear_reporte, name='crear_reporte'),
+
+    # Boletos
+    path('boletos/', views.lista_boletos, name='lista_boletos'),
+    path('boletos/crear/', views.crear_boleto, name='crear_boleto'),
 ]

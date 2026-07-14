@@ -7,8 +7,9 @@ from django.utils import timezone
 from functools import wraps
 from .models import Usuario, Terminal, Bus, Viaje, Asiento, Chofer, Administrativo, Reporte, BusReporte, ChoferReporte
 from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm
-
-# ── Seguridad ─────────────────────────────────────────────────────────────────
+from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm, ViajeForm #AGREGUE ESTO
+from .models import Usuario, Terminal, Bus, Viaje, Asiento, Chofer, Administrativo, Reporte, BusReporte, ChoferReporte, Boleto
+from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm, ViajeForm, BoletoForm
 
 def rol_requerido(*roles):
     def decorator(view_func):
@@ -368,8 +369,8 @@ def crear_chofer(request):
     form = ChoferForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
         chofer = form.save()
-        messages.success(request, f"Se guardo exitosamente.")
-        return redirect('chofer/lista_choferes.html')
+        messages.success(request, f"Chofer {chofer.nombre} inscrito exitosamente.")
+        return redirect('lista_choferes')
     return render(request, 'chofer/form_chofer.html', {'form': form, 'titulo': 'Inscribir Chofer'})
 
 @login_required
@@ -459,3 +460,50 @@ def editar_administrativo(request, admin_id):
         'form': form,
         'titulo': f'Editar Administrativo — {admin.rut}'
     })
+@login_required
+def lista_viajes(request):
+    if request.method == 'POST':
+        form = ViajeForm(request.POST)
+        if form.is_valid():
+            viaje = form.save(commit=False)
+            # id_chofer en el modelo es IntegerField, asi que guardamos el numero real
+            viaje.id_chofer = form.cleaned_data['id_chofer'].id_chofer
+            viaje.save()
+            messages.success(request, "Viaje creado exitosamente.")
+            return redirect('lista_viajes')
+        else:
+            messages.error(request, "No se registró el viaje.") #BORRAR DESPUES QUIZA
+    else:
+        form = ViajeForm()
+
+    viajes = Viaje.objects.select_related('id_terminal_inicio', 'id_terminal_final', 'id_bus').all().order_by('-fecha_hora_inicio')
+
+    return render(request, 'viajes/lista_viajes.html', {
+        'viajes': viajes,
+        'form': form,
+    })
+@login_required
+def lista_boletos(request):
+    q = request.GET.get('q', '')
+    boletos = Boleto.objects.select_related('id_viaje').all()
+
+    if q:
+        boletos = boletos.filter(
+            Q(ciudad_inicial__icontains=q) | Q(ciudad_final__icontains=q)
+        )
+
+    return render(request, 'boletos/lista_boletos.html', {
+        'boletos': boletos,
+        'q': q
+    })
+
+
+@login_required
+@rol_requerido('superadmin', 'administrativo')
+def crear_boleto(request):
+    form = BoletoForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        boleto = form.save()
+        messages.success(request, f"Boleto #{boleto.id_boleto} generado exitosamente.")
+        return redirect('lista_boletos')
+    return render(request, 'boletos/form_boleto.html', {'form': form, 'titulo': 'Generar Boleto'})

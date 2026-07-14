@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Boletos — TransBus{% endblock %}
+{% block page_title %}Boletos{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 class="card-title">Listado de Boletos</h3>
+        <a href="{% url 'crear_boleto' %}" class="btn btn-primary btn-sm">
+            <span class="nav-icon">🎫</span> Generar Boleto
+        </a>
+    </div>
+
+    <form method="get" style="padding: 0 20px 16px;">
+        <input type="text" name="q" value="{{ q }}" placeholder="Buscar por ciudad de origen o destino..." class="form-control">
+    </form>
+
+    {% if boletos %}
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>N° Boleto</th>
+                    <th>Fecha Compra</th>
+                    <th>Tipo</th>
+                    <th>Asiento</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Viaje</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for boleto in boletos %}
+                <tr>
+                    <td>#{{ boleto.id_boleto }}</td>
+                    <td>{{ boleto.fecha_hora_compra|date:"d/m/Y H:i" }}</td>
+                    <td>{{ boleto.tipo_boleto }}</td>
+                    <td>{{ boleto.num_asiento }}</td>
+                    <td>{{ boleto.ciudad_inicial }}</td>
+                    <td>{{ boleto.ciudad_final }}</td>
+                    <td>{{ boleto.id_viaje.fecha_hora_inicio|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">🎫</div>
+        <p>No hay boletos generados todavía.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

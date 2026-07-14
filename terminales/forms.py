@@ -1,6 +1,7 @@
 from django import forms
 from .models import Terminal, Bus, Usuario, Chofer, Administrativo
-
+from .models import Terminal, Bus, Usuario, Chofer, Administrativo, Viaje #AGREGUE ESTO
+from .models import Terminal, Bus, Usuario, Chofer, Administrativo, Viaje, Boleto
 
 class LoginForm(forms.Form):
     username = forms.CharField(
@@ -257,3 +258,90 @@ class AdministrativoForm(forms.ModelForm):
             raise forms.ValidationError("Este RUT ya está registrado para otro administrativo.")
 
         return rut
+
+class ViajeForm(forms.ModelForm):
+    # Se mantiene declarado manualmente para mostrar el select con los choferes reales,
+    # pero OJO: ya NO va en Meta.fields, porque en el modelo id_chofer es IntegerField
+    # y Django intentaria asignar el objeto Chofer completo al instance durante la validacion,
+    # rompiendo el full_clean() del modelo.
+    id_chofer = forms.ModelChoiceField(
+        queryset=Chofer.objects.all(),
+        label='Chofer',
+        empty_label="Seleccione un chofer"
+    )
+
+    class Meta:
+        model = Viaje
+        # id_chofer NO va aqui
+        fields = ['fecha_hora_inicio', 'id_bus', 'id_terminal_inicio', 'id_terminal_final']
+        labels = {
+            'fecha_hora_inicio': 'Fecha y Hora',
+            'id_bus': 'Bus',
+            'id_terminal_inicio': 'Terminal de Origen',
+            'id_terminal_final': 'Terminal de Destino',
+        }
+        widgets = {
+            'fecha_hora_inicio': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M'
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['id_bus'].queryset = Bus.objects.all().order_by('patente')
+        self.fields['id_bus'].empty_label = "Seleccione un bus"
+        self.fields['id_terminal_inicio'].queryset = Terminal.objects.all().order_by('nombre')
+        self.fields['id_terminal_inicio'].empty_label = "Seleccione terminal de origen"
+        self.fields['id_terminal_final'].queryset = Terminal.objects.all().order_by('nombre')
+        self.fields['id_terminal_final'].empty_label = "Seleccione terminal de destino"
+
+        # Como id_chofer ya no esta en Meta.fields, hay que reordenarlo manualmente
+        # para que aparezca en el lugar correcto del formulario (despues de fecha_hora_inicio)
+        self.order_fields(['fecha_hora_inicio', 'id_chofer', 'id_bus', 'id_terminal_inicio', 'id_terminal_final'])
+
+    def clean(self):
+        cleaned_data = super().clean()
+        terminal_inicio = cleaned_data.get('id_terminal_inicio')
+        terminal_final = cleaned_data.get('id_terminal_final')
+        if terminal_inicio and terminal_final and terminal_inicio == terminal_final:
+            raise forms.ValidationError("El terminal de origen y destino no pueden ser el mismo.")
+        return cleaned_data
+    
+class BoletoForm(forms.ModelForm):
+    TIPOS_BOLETO = [
+        ('Normal', 'Normal'),
+        ('Estudiante', 'Estudiante'),
+        ('Adulto Mayor', 'Adulto Mayor'),
+        ('Discapacidad', 'Discapacidad'),
+    ]
+
+    tipo_boleto = forms.ChoiceField(choices=TIPOS_BOLETO, label='Tipo de Boleto')
+
+    class Meta:
+        model = Boleto
+        fields = ['tipo_boleto', 'num_asiento', 'ciudad_inicial', 'ciudad_final', 'id_viaje']
+        labels = {
+            'num_asiento': 'Número de Asiento',
+            'ciudad_inicial': 'Ciudad de Origen',
+            'ciudad_final': 'Ciudad de Destino',
+            'id_viaje': 'Viaje',
+        }
+        widgets = {
+            'ciudad_inicial': forms.TextInput(attrs={'placeholder': 'Ej: Concepcion'}),
+            'ciudad_final': forms.TextInput(attrs={'placeholder': 'Ej: Santiago'}),
+            'num_asiento': forms.NumberInput(attrs={'placeholder': 'Ej: 14'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['id_viaje'].queryset = Viaje.objects.select_related(
+            'id_terminal_inicio', 'id_terminal_final'
+        ).order_by('-fecha_hora_inicio')
+        self.fields['id_viaje'].empty_label = "Seleccione un viaje"
+
+    def clean_num_asiento(self):
+        num_asiento = self.cleaned_data.get('num_asiento')
+        if num_asiento is not None and num_asiento <= 0:
+            raise forms.ValidationError("El número de asiento debe ser mayor a 0.")
+        return num_asiento

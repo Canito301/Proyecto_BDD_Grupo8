@@ -5,8 +5,11 @@
 
 {% block content %}
 <div class="card">
-    <div class="card-header">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
         <h3 class="card-title">Listado de Viajes</h3>
+        <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalViaje()">
+            <span class="nav-icon">➕</span> Crear Viaje
+        </button>
     </div>
 
     {% if viajes %}
@@ -45,4 +48,149 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Modal Crear Viaje -->
+<div id="modalCrearViaje" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Crear Viaje</h3>
+            <button type="button" class="modal-close" onclick="cerrarModalViaje()">&times;</button>
+        </div>
+
+        <form method="post" action="{% url 'lista_viajes' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-error">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="{{ form.fecha_hora_inicio.id_for_label }}">Fecha y Hora</label>
+                    {{ form.fecha_hora_inicio }}
+                    {% if form.fecha_hora_inicio.errors %}
+                        <span class="error-text">{{ form.fecha_hora_inicio.errors|first }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.id_chofer.id_for_label }}">Chofer</label>
+                    {{ form.id_chofer }}
+                    {% if form.id_chofer.errors %}
+                        <span class="error-text">{{ form.id_chofer.errors|first }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.id_bus.id_for_label }}">Bus</label>
+                    {{ form.id_bus }}
+                    {% if form.id_bus.errors %}
+                        <span class="error-text">{{ form.id_bus.errors|first }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.id_terminal_inicio.id_for_label }}">Terminal de Origen</label>
+                    {{ form.id_terminal_inicio }}
+                    {% if form.id_terminal_inicio.errors %}
+                        <span class="error-text">{{ form.id_terminal_inicio.errors|first }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.id_terminal_final.id_for_label }}">Terminal de Destino</label>
+                    {{ form.id_terminal_final }}
+                    {% if form.id_terminal_final.errors %}
+                        <span class="error-text">{{ form.id_terminal_final.errors|first }}</span>
+                    {% endif %}
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalViaje()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Viaje</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .modal-box {
+        background: #fff;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 480px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #eee;
+    }
+    .modal-header h3 { margin: 0; }
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 22px;
+        cursor: pointer;
+        line-height: 1;
+    }
+    .modal-body { padding: 20px; }
+    .modal-footer {
+        padding: 16px 20px;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .form-group select,
+    .form-group input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    .error-text {
+        color: #c0392b;
+        font-size: 12px;
+        display: block;
+        margin-top: 4px;
+    }
+</style>
+
+<script>
+    function abrirModalViaje() {
+        document.getElementById('modalCrearViaje').style.display = 'flex';
+    }
+    function cerrarModalViaje() {
+        document.getElementById('modalCrearViaje').style.display = 'none';
+    }
+
+</script>
 {% endblock %}
