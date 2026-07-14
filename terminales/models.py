@@ -84,3 +84,24 @@ class Asiento(models.Model):
         db_table = 'asiento'
         managed = False
         unique_together = (('num_asiento', 'id_bus'),)
+
+class Chofer(models.Model):
+    id_chofer = models.AutoField(primary_key=True)
+    rut = models.CharField(max_length=12)
+    nombre = models.CharField(max_length=150)
+    fecha_inicio_contrato = models.DateField()
+
+    class Meta:
+        db_table = 'chofer'
+        managed = False
+
+class Administrativo(models.Model):
+    id_admin = models.AutoField(primary_key=True)
+    id_terminal = models.ForeignKey(Terminal, on_delete=models.DO_NOTHING, db_column='id_terminal')
+    rut = models.CharField(max_length=12)
+    nombre = models.CharField(max_length=150)
+    fecha_inicio_contrato = models.DateField()
+
+    class Meta:
+        db_table = 'administrativo'
+        managed = False

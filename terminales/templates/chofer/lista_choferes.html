@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Choferes — TransBus{% endblock %}
+{% block page_title %}Nómina de Choferes{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'crear_chofer' %}" class="btn btn-acento">+ Registrar Chofer</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="get" style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+        <input type="text" name="q" value="{{ q }}"
+            placeholder="Buscar por RUT o nombre..."
+            style="flex:1; min-width:200px; padding:9px 14px; border:1.5px solid #E2E8F0; border-radius:8px; font-size:14px;">
+        
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        
+        {% if q %}
+        <a href="{% url 'lista_choferes' %}" class="btn btn-ghost">Limpiar</a>
+        {% endif %}
+    </form>
+
+    {% if choferes %}
+    <table>
+        <thead>
+            <tr>
+                <th>RUT</th>
+                <th>Nombre Completo</th>
+                <th>Inicio de Contrato</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for chofer in choferes %}
+        <tr>
+            <td><strong>{{ chofer.rut|upper }}</strong></td>
+            
+            <td>{{ chofer.nombre }}</td>
+            
+            <td style="color:#718096;">
+                {{ chofer.fecha_inicio_contrato|date:"d M Y" }}
+            </td>
+            
+            <td>
+                <a href="{% url 'editar_chofer' chofer.pk %}" class="btn btn-ghost btn-sm">✏️ Editar</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">👨‍✈️</div>
+        <p>No se encontraron choferes{% if q %} para la búsqueda "{{ q }}"{% endif %}.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -32,4 +32,14 @@ urlpatterns = [
     # Vinculación Bus-Terminal
     path('buses/vincular/', views.vincular_bus_terminal, name='vincular_bus_terminal'),
     path('buses/<int:bus_id>/desvincular/', views.desvincular_bus, name='desvincular_bus'),
+
+    # Choferes
+    path('choferes/', views.lista_choferes, name='lista_choferes'),
+    path('choferes/crear/', views.crear_chofer, name='crear_chofer'),
+    path('choferes/editar/<int:chofer_id>/', views.editar_chofer, name='editar_chofer'),
+
+    # Administrativos
+    path('administrativos/', views.lista_administrativos, name='lista_administrativos'),
+    path('administrativos/crear/', views.crear_administrativo, name='crear_administrativo'),
+    path('administrativos/editar/<int:admin_id>/', views.editar_administrativo, name='editar_administrativo'),
 ]
