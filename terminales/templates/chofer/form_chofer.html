@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} — TransBus{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'lista_choferes' %}" class="btn btn-ghost">← Volver</a>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:600px;">
+    <div class="card-title" style="margin-bottom:24px;">👨‍✈️ {{ titulo }}</div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label>RUT</label>
+                {{ form.rut }}
+                {% if form.rut.errors %}
+                <p class="form-error" style="color: red; font-size: 0.9em; margin-top: 4px;">
+                    {{ form.rut.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label>Nombre completo</label>
+                {{ form.nombre }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Fecha de Inicio de Contrato</label>
+            {{ form.fecha_inicio_contrato }}
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:8px;">
+            <button type="submit" class="btn btn-primary" style="flex:1;">Guardar →</button>
+            <a href="{% url 'lista_choferes' %}" class="btn btn-ghost">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

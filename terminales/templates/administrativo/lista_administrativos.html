@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Administrativos — TransBus{% endblock %}
+{% block page_title %}Personal Administrativo{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'crear_administrativo' %}" class="btn btn-acento">+ Registrar Administrativo</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="get" style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+        <input type="text" name="q" value="{{ q }}"
+            placeholder="Buscar por RUT o nombre..."
+            style="flex:1; min-width:200px; padding:9px 14px; border:1.5px solid #E2E8F0; border-radius:8px; font-size:14px;">
+        
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        {% if q %}
+        <a href="{% url 'lista_administrativos' %}" class="btn btn-ghost">Limpiar</a>
+        {% endif %}
+    </form>
+
+    {% if administrativos %}
+    <table>
+        <thead>
+            <tr>
+                <th>RUT</th>
+                <th>Nombre</th>
+                <th>Terminal Asignado</th>
+                <th>Inicio de Contrato</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for admin in administrativos %}
+        <tr>
+            <td><strong>{{ admin.rut|upper }}</strong></td>
+            <td>{{ admin.nombre }}</td>
+            <td>
+                {% if admin.id_terminal %}
+                    <span class="badge badge-azul">📍 {{ admin.id_terminal.nombre }}</span>
+                {% else %}
+                    <span class="badge badge-gris">Sin terminal</span>
+                {% endif %}
+            </td>
+            <td style="color:#718096;">
+                {{ admin.fecha_inicio_contrato|date:"d M Y" }}
+            </td>
+            <td>
+                <a href="{% url 'editar_administrativo' admin.pk %}" class="btn btn-ghost btn-sm">✏️ Editar</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">💼</div>
+        <p>No se encontraron administrativos{% if q %} para "{{ q }}"{% endif %}.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

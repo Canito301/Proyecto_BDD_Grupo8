@@ -85,7 +85,6 @@ class Asiento(models.Model):
         managed = False
         unique_together = (('num_asiento', 'id_bus'),)
 
-
 class Chofer(models.Model):
     id_chofer = models.AutoField(primary_key=True)
     rut = models.CharField(max_length=12, unique=True)
@@ -128,7 +127,6 @@ class Reporte(models.Model):
 
 
 class BusReporte(models.Model):
-    # En Django, modelos sin PK fallan, así que usamos id_bus como PK virtual para leer.
     id_bus = models.ForeignKey(Bus, on_delete=models.CASCADE, db_column='id_bus', primary_key=True)
     id_reporte = models.ForeignKey(Reporte, on_delete=models.CASCADE, db_column='id_reporte')
 

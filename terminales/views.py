@@ -4,12 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Count
 from django.utils import timezone
-from .models import Usuario, Terminal, Bus, Viaje, Asiento
-from .forms import LoginForm, TerminalForm, BusForm
 from functools import wraps
-from .models import Usuario, Terminal, Bus, Viaje, Asiento, Reporte, Administrativo, BusReporte, ChoferReporte, Chofer
-from .forms import LoginForm, TerminalForm, BusForm, ReporteForm
-
+from .models import Usuario, Terminal, Bus, Viaje, Asiento, Chofer, Administrativo, Reporte, BusReporte, ChoferReporte
+from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm
 
 # ── Seguridad ─────────────────────────────────────────────────────────────────
 
@@ -68,6 +65,8 @@ def dashboard(request):
         
         # Traemos los primeros 5 terminales ordenados por su nombre o id_terminal
         'terminales_recientes': Terminal.objects.all().order_by('nombre')[:5],
+
+        'total_choferes': Chofer.objects.count(),
     }
     return render(request, 'dashboard.html', context)
 
@@ -358,3 +357,105 @@ def crear_reporte(request):
         form = ReporteForm()
 
     return render(request, 'crear_reporte.html', {'form': form})
+
+
+# ── Chofer ──────────────────────────────────────────────────────────
+
+
+@login_required
+@rol_requerido('superadmin', 'administrativo')
+def crear_chofer(request):
+    form = ChoferForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        chofer = form.save()
+        messages.success(request, f"Se guardo exitosamente.")
+        return redirect('chofer/lista_choferes.html')
+    return render(request, 'chofer/form_chofer.html', {'form': form, 'titulo': 'Inscribir Chofer'})
+
+@login_required
+def lista_choferes(request):
+    q = request.GET.get('q', '')
+    choferes = Chofer.objects.all()
+
+    # Si el usuario escribió algo en el buscador, filtramos por RUT o Nombre
+    if q:
+        choferes = choferes.filter(
+            Q(rut__icontains=q) | Q(nombre__icontains=q)
+        )
+
+    return render(request, 'chofer/lista_choferes.html', {
+        'choferes': choferes,
+        'q': q
+    })
+
+@login_required
+@rol_requerido('superadmin', 'administrativo')
+def editar_chofer(request, chofer_id):
+    # 1. Buscamos al chofer en la base de datos por su ID (la PK autoincremental)
+    chofer = get_object_or_404(Chofer, pk=chofer_id)
+
+    # 2. Cargamos el formulario.
+    # El 'instance=chofer' es vital: le dice a Django que pre-llene los campos con los datos actuales
+    form = ChoferForm(request.POST or None, instance=chofer)
+
+    # 3. Si el usuario modificó algo y apretó "Guardar"
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, f"Chofer {chofer.nombre} actualizado exitosamente.")
+        return redirect('lista_choferes')
+
+    # 4. Si solo está entrando a la página, le mostramos el HTML (podemos reciclar el mismo que usamos para crear)
+    return render(request, 'form_chofer.html', {
+        'form': form,
+        'titulo': f'Editar Chofer — {chofer.rut}'
+    })
+
+
+# ── Administrativos ──────────────────────────────────────────────────────────
+
+@login_required
+def lista_administrativos(request):
+    q = request.GET.get('q', '')
+    # select_related optimiza la consulta JOIN con la tabla terminal
+    administrativos = Administrativo.objects.select_related('id_terminal').all()
+
+    if q:
+        administrativos = administrativos.filter(
+            Q(rut__icontains=q) | Q(nombre__icontains=q)
+        )
+
+    return render(request, 'administrativo/lista_administrativos.html', {
+        'administrativos': administrativos,
+        'q': q
+    })
+
+
+@login_required
+@rol_requerido('superadmin', 'administrativo')
+def crear_administrativo(request):
+    form = AdministrativoForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Administrativo registrado exitosamente.")
+        return redirect('lista_administrativos')
+
+    return render(request, 'administrativo/form_administrativo.html', {
+        'form': form,
+        'titulo': 'Registrar Administrativo'
+    })
+
+
+@login_required
+@rol_requerido('superadmin', 'administrativo')
+def editar_administrativo(request, admin_id):
+    admin = get_object_or_404(Administrativo, pk=admin_id)
+    form = AdministrativoForm(request.POST or None, instance=admin)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, f"Administrativo {admin.nombre} actualizado exitosamente.")
+        return redirect('lista_administrativos')
+
+    return render(request, 'administrativo/form_administrativo.html', {
+        'form': form,
+        'titulo': f'Editar Administrativo — {admin.rut}'
+    })

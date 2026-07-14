@@ -1,6 +1,5 @@
 from django import forms
-from .models import Terminal, Bus, Usuario
-from .models import Terminal, Bus, Usuario, Chofer
+from .models import Terminal, Bus, Usuario, Chofer, Administrativo
 
 
 class LoginForm(forms.Form):
@@ -104,3 +103,157 @@ class ReporteForm(forms.Form):
         required=False,
         empty_label="Ninguno"
     )
+
+class ChoferForm(forms.ModelForm):
+    class Meta:
+        model = Chofer
+        fields = ['rut', 'nombre', 'fecha_inicio_contrato']
+
+        widgets = {
+            'fecha_inicio_contrato': forms.DateInput(
+                attrs={
+                    'type': 'date', # Esto invoca el calendario del navegador
+                }
+            )
+        }
+
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+
+        if not rut:
+            return rut
+
+        # Verificamos cómo fue ingresado (Puntos y guion, igual que tu Dart)
+        if "-" not in rut:
+            raise forms.ValidationError("El RUT debe contener un guion (-).")
+
+        if "." in rut:
+            if len(rut) < 11:
+                raise forms.ValidationError("El RUT con puntos está incompleto.")
+            if rut.count('.') != 2:
+                raise forms.ValidationError("Formato inválido. Debe tener dos puntos o ninguno.")
+        else:
+            if len(rut) < 9:
+                raise forms.ValidationError("El RUT está incompleto.")
+
+        # Dejamos el RUT limpio y separamos el cuerpo del DV
+        rut_limpio = rut.replace('.', '').replace('-', '').upper()
+
+        if len(rut_limpio) < 2:
+            raise forms.ValidationError("El RUT ingresado es inválido.")
+
+        cuerpo = rut_limpio[:-1]
+        dv_ingresado = rut_limpio[-1]
+
+        # Evitamos caídas si ingresan letras en el cuerpo
+        if not cuerpo.isdigit():
+            raise forms.ValidationError("El cuerpo del RUT solo debe contener números.")
+
+        nums = int(cuerpo)
+        if nums > 40000000 or nums < 500000:
+            raise forms.ValidationError("El RUT está fuera del rango permitido para choferes.")
+
+        # Verificar Módulo 11 matemático
+        suma = 0
+        multiplicador = 2
+
+        # Recorremos el cuerpo de atrás hacia adelante en Python
+        for digito in reversed(cuerpo):
+            suma += int(digito) * multiplicador
+            multiplicador += 1
+            if multiplicador > 7:
+                multiplicador = 2
+
+        resto = suma % 11
+        resultado = 11 - resto
+
+        # Transformamos el resultado matemático al dígito esperado
+        if resultado == 11:
+            dv_esperado = "0"
+        elif resultado == 10:
+            dv_esperado = "K"
+        else:
+            dv_esperado = str(resultado)
+
+        if dv_ingresado != dv_esperado:
+            raise forms.ValidationError("El dígito verificador es incorrecto.")
+
+        if Chofer.objects.filter(rut=rut).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Este RUT ya se encuentra registrado en el sistema.")
+
+        # Si supera todas las barreras sin lanzar un ValidationError, el RUT es válido
+        return rut
+
+class AdministrativoForm(forms.ModelForm):
+    class Meta:
+        model = Administrativo
+        # Usamos los campos exactos de tu modelo
+        fields = ['rut', 'nombre', 'id_terminal', 'fecha_inicio_contrato']
+
+        widgets = {
+            # Calendario automático para la fecha
+            'fecha_inicio_contrato': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+        if not rut:
+            return rut
+
+        # 1. Verificaciones de formato
+        if "-" not in rut:
+            raise forms.ValidationError("El RUT debe contener un guion (-).")
+
+        if "." in rut:
+            if len(rut) < 11:
+                raise forms.ValidationError("El RUT con puntos está incompleto.")
+            if rut.count('.') != 2:
+                raise forms.ValidationError("Formato inválido. Debe tener dos puntos o ninguno.")
+        else:
+            if len(rut) < 9:
+                raise forms.ValidationError("El RUT está incompleto.")
+
+        # 2. Limpieza del string
+        rut_limpio = rut.replace('.', '').replace('-', '').upper()
+        if len(rut_limpio) < 2:
+            raise forms.ValidationError("El RUT ingresado es inválido.")
+
+        cuerpo = rut_limpio[:-1]
+        dv_ingresado = rut_limpio[-1]
+
+        if not cuerpo.isdigit():
+            raise forms.ValidationError("El cuerpo del RUT solo debe contener números.")
+
+        # 3. Rango numérico permitido
+        nums = int(cuerpo)
+        if nums > 40000000 or nums < 500000:
+            raise forms.ValidationError("El RUT está fuera del rango permitido.")
+
+        # 4. Verificación matemática Módulo 11
+        suma = 0
+        multiplicador = 2
+        for digito in reversed(cuerpo):
+            suma += int(digito) * multiplicador
+            multiplicador += 1
+            if multiplicador > 7:
+                multiplicador = 2
+
+        resto = suma % 11
+        resultado = 11 - resto
+
+        if resultado == 11:
+            dv_esperado = "0"
+        elif resultado == 10:
+            dv_esperado = "K"
+        else:
+            dv_esperado = str(resultado)
+
+        if dv_ingresado != dv_esperado:
+            raise forms.ValidationError("El dígito verificador es incorrecto.")
+
+        # 5. Evitamos duplicados en la tabla de ADMINISTRATIVOS
+        if Administrativo.objects.filter(rut=rut).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Este RUT ya está registrado para otro administrativo.")
+
+        return rut
