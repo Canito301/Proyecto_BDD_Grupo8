@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Viajes Programados — TransBus{% endblock %}
+{% block page_title %}Viajes Programados{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Listado de Viajes</h3>
+    </div>
+
+    {% if viajes %}
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha y Hora</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Bus (Patente)</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for viaje in viajes %}
+                <tr>
+                    <td>{{ viaje.fecha_hora_inicio|date:"d/m/Y H:i" }}</td>
+                    <td>{{ viaje.id_terminal_inicio.nombre }}</td>
+                    <td>{{ viaje.id_terminal_final.nombre }}</td>
+                    <td>{{ viaje.id_bus.patente }}</td>
+                    <td>
+                        <a href="{% url 'disponibilidad_asientos' viaje.id_viaje %}" class="btn btn-primary btn-sm">
+                            <span class="nav-icon">💺</span> Ver Asientos
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">🚌</div>
+        <p>No hay viajes programados en este momento.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

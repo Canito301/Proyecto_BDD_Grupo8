@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Vincular Bus a Terminal — TransBus{% endblock %}
+{% block page_title %}Vinculación de Bus a Terminal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vincular-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+    .bus-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-radius: 10px;
+        border: 1.5px solid var(--gris-200);
+        margin-bottom: 10px;
+        transition: all 0.15s;
+    }
+    .bus-card:hover {
+        border-color: var(--azul-claro);
+        box-shadow: 0 2px 8px rgba(49,130,206,0.10);
+    }
+    .bus-card.en-terminal {
+        border-left: 4px solid var(--verde);
+    }
+    .bus-card.en-ruta {
+        border-left: 4px solid var(--acento);
+    }
+    .bus-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .bus-patente {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+    }
+    .bus-estado {
+        font-size: 12px;
+        color: var(--gris-600);
+    }
+    .vincular-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .vincular-form select {
+        padding: 7px 12px;
+        border: 1.5px solid var(--gris-200);
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        background: white;
+    }
+    .vincular-form select:focus {
+        outline: none;
+        border-color: var(--azul-claro);
+    }
+    .section-subtitle {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--gris-600);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .count-badge {
+        background: var(--gris-100);
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--gris-800);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vincular-grid">
+    <!-- Buses en ruta (sin terminal) -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">🚌 Buses en Ruta</h3>
+        </div>
+        <div class="section-subtitle">
+            Sin terminal asignado <span class="count-badge">{{ buses_en_ruta|length }}</span>
+        </div>
+
+        {% for bus in buses_en_ruta %}
+        <div class="bus-card en-ruta">
+            <div class="bus-info">
+                <span class="bus-patente">{{ bus.patente }}</span>
+                <span class="bus-estado">
+                    {% if bus.accesibilidad_universal %}♿ Accesible{% endif %}
+                    {% if bus.kilometraje %}· {{ bus.kilometraje }} km{% endif %}
+                </span>
+            </div>
+            <form method="POST" action="{% url 'vincular_bus_terminal' %}" class="vincular-form">
+                {% csrf_token %}
+                <input type="hidden" name="bus_id" value="{{ bus.id_bus }}">
+                <select name="terminal_id" required>
+                    <option value="">Terminal...</option>
+                    {% for terminal in terminales %}
+                    <option value="{{ terminal.id_terminal }}">{{ terminal.nombre }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm"
+                    onclick="return confirm('¿Vincular bus {{ bus.patente }} al terminal seleccionado?');">
+                    Vincular
+                </button>
+            </form>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="padding: 24px;">
+            <div class="icon">✅</div>
+            <p>Todos los buses están en un terminal.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Buses en terminal (vinculados) -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">🏢 Buses en Terminal</h3>
+        </div>
+        <div class="section-subtitle">
+            Con terminal asignado
+        </div>
+
+        {% for bus in buses_vinculados %}
+        <div class="bus-card en-terminal">
+            <div class="bus-info">
+                <span class="bus-patente">{{ bus.patente }}</span>
+                <span class="bus-estado">
+                    📍 {{ bus.id_terminal.nombre }}
+                </span>
+            </div>
+            <form method="POST" action="{% url 'desvincular_bus' bus.id_bus %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-sm"
+                    onclick="return confirm('¿Desvincular bus {{ bus.patente }} del terminal {{ bus.id_terminal.nombre }}?');">
+                    Desvincular
+                </button>
+            </form>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="padding: 24px;">
+            <div class="icon">🚌</div>
+            <p>No hay buses vinculados a un terminal.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

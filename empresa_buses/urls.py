@@ -24,4 +24,12 @@ urlpatterns = [
     path('buses/nuevo/', views.crear_bus, name='crear_bus'),
     path('buses/<int:bus_id>/editar/', views.editar_bus, name='editar_bus'),
 
+    # Viajes y Asientos
+    path('viajes/', views.lista_viajes, name='lista_viajes'),
+    path('viajes/<int:viaje_id>/asientos/', views.disponibilidad_asientos, name='disponibilidad_asientos'),
+    path('viajes/<int:viaje_id>/asientos/<int:num_asiento>/reservar/', views.reservar_asiento, name='reservar_asiento'),
+
+    # Vinculación Bus-Terminal
+    path('buses/vincular/', views.vincular_bus_terminal, name='vincular_bus_terminal'),
+    path('buses/<int:bus_id>/desvincular/', views.desvincular_bus, name='desvincular_bus'),
 ]

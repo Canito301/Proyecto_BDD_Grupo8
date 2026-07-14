@@ -491,11 +491,17 @@
         </a>
 
         <div class="nav-section-label">Operaciones</div>
+        <a href="{% url 'lista_viajes' %}" class="nav-link">
+            <span class="nav-icon">🛣️</span> Viajes
+        </a>
         <a href="{% url 'lista_terminales' %}" class="nav-link">
             <span class="nav-icon">🏢</span> Terminales
         </a>
         <a href="{% url 'lista_buses' %}" class="nav-link">
             <span class="nav-icon">🚌</span> Buses
+        </a>
+        <a href="{% url 'vincular_bus_terminal' %}" class="nav-link">
+            <span class="nav-icon">🔗</span> Vincular Bus
         </a>
 
         {% if user.is_superuser %}

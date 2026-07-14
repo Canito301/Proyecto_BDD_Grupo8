@@ -60,3 +60,27 @@ class Bus(models.Model):
         verbose_name = "Bus"
         verbose_name_plural = "Buses"
         ordering = ['patente']
+
+
+class Viaje(models.Model):
+    id_viaje = models.AutoField(primary_key=True)
+    fecha_hora_inicio = models.DateTimeField()
+    id_chofer = models.IntegerField()
+    id_bus = models.ForeignKey(Bus, on_delete=models.CASCADE, db_column='id_bus')
+    id_terminal_inicio = models.ForeignKey(Terminal, on_delete=models.CASCADE, db_column='id_terminal_inicio', related_name='viajes_inicio')
+    id_terminal_final = models.ForeignKey(Terminal, on_delete=models.CASCADE, db_column='id_terminal_final', related_name='viajes_final')
+
+    class Meta:
+        db_table = 'viaje'
+        managed = False
+
+
+class Asiento(models.Model):
+    num_asiento = models.IntegerField(primary_key=True)
+    id_bus = models.ForeignKey(Bus, on_delete=models.CASCADE, db_column='id_bus')
+    estado = models.BooleanField(default=True)  # True = disponible
+
+    class Meta:
+        db_table = 'asiento'
+        managed = False
+        unique_together = (('num_asiento', 'id_bus'),)

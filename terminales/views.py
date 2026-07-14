@@ -3,7 +3,8 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Count
-from .models import Usuario, Terminal, Bus
+from django.utils import timezone
+from .models import Usuario, Terminal, Bus, Viaje, Asiento
 from .forms import LoginForm, TerminalForm, BusForm
 from functools import wraps
 
@@ -201,3 +202,110 @@ def editar_bus(request, bus_id):
         messages.success(request, f"Bus {bus.patente} actualizado.")
         return redirect('lista_buses')
     return render(request, 'form.html', {'form': form, 'titulo': f'Editar Bus — {bus.patente}'})
+
+
+# ── Viajes y Asientos ──────────────────────────────────────────────────────────
+
+@login_required
+def lista_viajes(request):
+    viajes = Viaje.objects.select_related('id_terminal_inicio', 'id_terminal_final', 'id_bus').all().order_by('-fecha_hora_inicio')
+    return render(request, 'viajes/lista_viajes.html', {'viajes': viajes})
+
+
+@login_required
+def disponibilidad_asientos(request, viaje_id):
+    viaje = get_object_or_404(Viaje.objects.select_related('id_terminal_inicio', 'id_terminal_final', 'id_bus'), pk=viaje_id)
+    # Obtener asientos del bus asignado a este viaje
+    asientos = Asiento.objects.filter(id_bus=viaje.id_bus_id).order_by('num_asiento')
+    
+    return render(request, 'asientos/disponibilidad.html', {
+        'viaje': viaje,
+        'asientos': asientos
+    })
+
+
+@login_required
+def reservar_asiento(request, viaje_id, num_asiento):
+    if request.method == 'POST':
+        viaje = get_object_or_404(Viaje, pk=viaje_id)
+        # Asiento específico del bus asignado al viaje
+        asiento = get_object_or_404(Asiento, id_bus=viaje.id_bus_id, num_asiento=num_asiento)
+        
+        if asiento.estado: # Si está disponible
+            # Usamos update() con ambos campos para la PK compuesta
+            Asiento.objects.filter(id_bus=viaje.id_bus_id, num_asiento=num_asiento).update(estado=False)
+            messages.success(request, f"¡Asiento {num_asiento} reservado exitosamente!")
+        else:
+            messages.error(request, f"El asiento {num_asiento} ya se encuentra ocupado.")
+            
+    return redirect('disponibilidad_asientos', viaje_id=viaje_id)
+
+
+# ── Vinculación de Bus a Terminal ──────────────────────────────────────────────
+
+@login_required
+@rol_requerido('superadmin', 'administrativo')
+def vincular_bus_terminal(request):
+    """Lista buses en ruta (sin terminal) y permite vincularlos a un terminal."""
+    buses_en_ruta = Bus.objects.filter(id_terminal__isnull=True).order_by('patente')
+    buses_vinculados = Bus.objects.filter(id_terminal__isnull=False).select_related('id_terminal').order_by('patente')
+    terminales = Terminal.objects.all().order_by('nombre')
+    
+    if request.method == 'POST':
+        bus_id = request.POST.get('bus_id')
+        terminal_id = request.POST.get('terminal_id')
+        
+        bus = get_object_or_404(Bus, pk=bus_id)
+        terminal = get_object_or_404(Terminal, pk=terminal_id)
+        
+        # Validación: verificar que el bus no esté ya en otro terminal
+        if bus.id_terminal_id is not None:
+            messages.error(
+                request,
+                f"El bus {bus.patente} ya se encuentra vinculado al terminal "
+                f"{bus.id_terminal.nombre}. Debe desvincularlo primero."
+            )
+            return redirect('vincular_bus_terminal')
+        
+        # Validación: verificar que el bus no tenga un viaje activo en curso
+        ahora = timezone.now()
+        viaje_activo = Viaje.objects.filter(
+            id_bus=bus,
+            fecha_hora_inicio__lte=ahora,  # Ya comenzó
+        ).order_by('-fecha_hora_inicio').first()
+        
+        # Si tiene viaje activo, verificar que el terminal destino coincida
+        if viaje_activo and viaje_activo.id_terminal_final_id != terminal.pk:
+            messages.error(
+                request,
+                f"El bus {bus.patente} tiene un viaje activo con destino a "
+                f"{viaje_activo.id_terminal_final.nombre}. "
+                f"Solo puede vincularse a ese terminal."
+            )
+            return redirect('vincular_bus_terminal')
+        
+        # Todo OK: vincular el bus al terminal
+        Bus.objects.filter(pk=bus.pk).update(id_terminal=terminal)
+        messages.success(
+            request,
+            f"Bus {bus.patente} vinculado exitosamente al terminal {terminal.nombre}."
+        )
+        return redirect('vincular_bus_terminal')
+    
+    return render(request, 'buses/vincular_bus.html', {
+        'buses_en_ruta': buses_en_ruta,
+        'buses_vinculados': buses_vinculados,
+        'terminales': terminales,
+    })
+
+
+@login_required
+@rol_requerido('superadmin', 'administrativo')
+def desvincular_bus(request, bus_id):
+    """Desvincula un bus de su terminal actual (lo pone en ruta)."""
+    if request.method == 'POST':
+        bus = get_object_or_404(Bus, pk=bus_id)
+        nombre_terminal = bus.id_terminal.nombre if bus.id_terminal else 'N/A'
+        Bus.objects.filter(pk=bus.pk).update(id_terminal=None)
+        messages.success(request, f"Bus {bus.patente} desvinculado del terminal {nombre_terminal}.")
+    return redirect('vincular_bus_terminal')
