@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Reportes — TransBus{% endblock %}
+{% block page_title %}Reportes{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'crear_reporte' %}" class="btn btn-acento">+ Nuevo Reporte</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="get" class="search-bar">
+        <input type="text" name="q" value="{{ q }}" placeholder="Buscar por tipo o descripción...">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        {% if q %}<a href="{% url 'lista_reportes' %}" class="btn btn-ghost">Limpiar</a>{% endif %}
+    </form>
+
+    {% if reportes %}
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Administrativo</th>
+                <th>Bus</th>
+                <th>Chofer</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in reportes %}
+        <tr>
+            <td><strong>{{ r.id_reporte }}</strong></td>
+            <td>
+                {% if r.tipo == 'accidente' %}
+                    <span class="badge badge-rojo">Accidente</span>
+                {% elif r.tipo == 'mantenimiento' %}
+                    <span class="badge badge-amarillo">Mantenimiento</span>
+                {% elif r.tipo == 'infraccion' %}
+                    <span class="badge badge-azul">Infracción</span>
+                {% else %}
+                    <span class="badge badge-gris">{{ r.tipo|default:"Sin tipo" }}</span>
+                {% endif %}
+            </td>
+            <td style="max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color:#718096; font-size:13px;">
+                {{ r.descripcion }}
+            </td>
+            <td>{{ r.id_admin.nombre|default:"—" }}</td>
+            <td>
+                {% if r.bus_vinculado %}
+                    <span class="badge badge-azul">{{ r.bus_vinculado.patente }}</span>
+                {% else %}
+                    <span style="color: var(--gris-400);">—</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if r.chofer_vinculado %}
+                    {{ r.chofer_vinculado.nombre }}
+                {% else %}
+                    <span style="color: var(--gris-400);">—</span>
+                {% endif %}
+            </td>
+            <td style="font-size:13px; color:#718096;">{{ r.fecha_hora|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">📝</div>
+        <p>No se encontraron reportes{% if q %} para "{{ q }}"{% endif %}.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

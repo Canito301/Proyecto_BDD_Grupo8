@@ -16,7 +16,7 @@ urlpatterns = [
     path('terminales/', views.lista_terminales, name='lista_terminales'),
     path('terminales/nuevo/', views.crear_terminal, name='crear_terminal'),
     path('terminales/<int:terminal_id>/', views.detalle_terminal, name='detalle_terminal'),
-    path('terminales/<int:terminal_id>/editar/', views.editar_terminal, name='editar_terminal'),
+
     path('terminales/<int:terminal_id>/eliminar/', views.eliminar_terminal, name='eliminar_terminal'),
 
     # Buses
@@ -44,6 +44,7 @@ urlpatterns = [
     path('administrativos/editar/<int:admin_id>/', views.editar_administrativo, name='editar_administrativo'),
 
     # Reportes (Requerimiento 3)
+    path('reportes/', views.lista_reportes, name='lista_reportes'),
     path('reportes/nuevo/', views.crear_reporte, name='crear_reporte'),
 
     # Boletos
