@@ -5,11 +5,8 @@ from django.contrib import messages
 from django.db.models import Q, Count
 from django.utils import timezone
 from functools import wraps
-from .models import Usuario, Terminal, Bus, Viaje, Asiento, Chofer, Administrativo, Reporte, BusReporte, ChoferReporte
-from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm
-from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm, ViajeForm #AGREGUE ESTO
-from .models import Usuario, Terminal, Bus, Viaje, Asiento, Chofer, Administrativo, Reporte, BusReporte, ChoferReporte, Boleto
-from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm, ViajeForm, BoletoForm
+from .models import Usuario, Terminal, Bus, Viaje, Asiento, Chofer, Administrativo, Reporte, BusReporte, ChoferReporte, Boleto, Tramo
+from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm, ViajeForm, BoletoForm, TramoForm
 
 def rol_requerido(*roles):
     def decorator(view_func):
@@ -507,3 +504,63 @@ def crear_boleto(request):
         messages.success(request, f"Boleto #{boleto.id_boleto} generado exitosamente.")
         return redirect('lista_boletos')
     return render(request, 'boletos/form_boleto.html', {'form': form, 'titulo': 'Generar Boleto'})
+
+
+# ── Tramos ────────────────────────────────────────────────────────────────────
+
+@login_required
+def lista_tramos(request):
+    origen = request.GET.get('origen', '')
+    destino = request.GET.get('destino', '')
+    precio_min = request.GET.get('precio_min', '')
+    precio_max = request.GET.get('precio_max', '')
+
+    tramos = Tramo.objects.all().order_by('ciudad_inicial', 'ciudad_final')
+
+    if origen:
+        tramos = tramos.filter(ciudad_inicial__icontains=origen)
+    if destino:
+        tramos = tramos.filter(ciudad_final__icontains=destino)
+    if precio_min:
+        tramos = tramos.filter(precio__gte=precio_min) # gte = Greater Than or Equal (Mayor o igual)
+    if precio_max:
+        tramos = tramos.filter(precio__lte=precio_max) # lte = Less Than or Equal (Menor o igual)
+
+    return render(request, 'tramo/lista_tramos.html', {
+        'tramos': tramos,
+        'origen': origen,
+        'destino': destino,
+        'precio_min': precio_min,
+        'precio_max': precio_max,
+    })
+
+@login_required
+@rol_requerido('superadmin', 'administrativo')
+def crear_tramo(request):
+    form = TramoForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Tramo registrado exitosamente.")
+        return redirect('lista_tramos')
+        
+    return render(request, 'tramo/form_tramo.html', {
+        'form': form,
+        'titulo': 'Nuevo Tramo'
+    })
+
+@login_required
+@rol_requerido('superadmin', 'administrativo')
+def editar_tramo(request, origen, destino):
+    # Buscamos usando ambos componentes de la llave primaria compuesta
+    tramo = get_object_or_404(Tramo, ciudad_inicial=origen, ciudad_final=destino)
+    
+    form = TramoForm(request.POST or None, instance=tramo)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, f"Precios y descuentos para {origen} - {destino} actualizados.")
+        return redirect('lista_tramos')
+        
+    return render(request, 'tramo/form_tramo.html', {
+        'form': form,
+        'titulo': f'Editar Tramo — {origen} a {destino}'
+    })

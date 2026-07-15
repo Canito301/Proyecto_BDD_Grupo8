@@ -162,3 +162,19 @@ class Boleto(models.Model):
         db_table = 'boleto'
         managed = False
         ordering = ['-fecha_hora_compra']
+
+
+class Tramo(models.Model):
+    pk = models.CompositePrimaryKey('ciudad_inicial', 'ciudad_final')
+    
+    ciudad_inicial = models.CharField(max_length=50)
+    ciudad_final = models.CharField(max_length=50)
+    
+    descuento_estudiante = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+    descuento_adulto_mayor = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+    
+    precio = models.IntegerField()
+
+    class Meta:
+        db_table = 'tramo'
+        managed = False 

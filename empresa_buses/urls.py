@@ -49,4 +49,9 @@ urlpatterns = [
     # Boletos
     path('boletos/', views.lista_boletos, name='lista_boletos'),
     path('boletos/crear/', views.crear_boleto, name='crear_boleto'),
+
+    # Tramos 
+    path('tramos/', views.lista_tramos, name='lista_tramos'),
+    path('tramos/crear/', views.crear_tramo, name='crear_tramo'),
+    path('tramos/editar/<str:origen>/<str:destino>/', views.editar_tramo, name='editar_tramo'),
 ]

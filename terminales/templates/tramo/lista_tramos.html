@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Tramos — TransBus{% endblock %}
+{% block page_title %}Gestión de Tramos y Tarifas{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'crear_tramo' %}" class="btn btn-acento">+ Nuevo Tramo</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="get" class="form-grid" style="margin-bottom:20px; background: #f8fafc; padding: 16px; border-radius: 8px;">
+        <div class="form-group">
+            <label>Origen</label>
+            <input type="text" name="origen" value="{{ origen }}" placeholder="Ej: Concepción">
+        </div>
+        <div class="form-group">
+            <label>Destino</label>
+            <input type="text" name="destino" value="{{ destino }}" placeholder="Ej: Santiago">
+        </div>
+        <div class="form-group">
+            <label>Precio Mínimo</label>
+            <input type="number" name="precio_min" value="{{ precio_min }}" placeholder="$ 0">
+        </div>
+        <div class="form-group">
+            <label>Precio Máximo</label>
+            <input type="number" name="precio_max" value="{{ precio_max }}" placeholder="$ 99999">
+        </div>
+        
+        <div style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+            <a href="{% url 'lista_tramos' %}" class="btn btn-ghost">Limpiar</a>
+        </div>
+    </form>
+
+    {% if tramos %}
+    <table>
+        <thead>
+            <tr>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Precio Base</th>
+                <th>Dcto. Estudiante</th>
+                <th>Dcto. Adulto Mayor</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for tramo in tramos %}
+        <tr>
+            <td><strong>{{ tramo.ciudad_inicial }}</strong></td>
+            <td><strong>{{ tramo.ciudad_final }}</strong></td>
+            <td style="color:var(--verde); font-weight:600;">${{ tramo.precio }}</td>
+            <td>
+                {% if tramo.descuento_estudiante %}
+                    <span class="badge badge-azul">-{{ tramo.descuento_estudiante|floatformat:2 }}%</span>
+                {% else %}-{% endif %}
+            </td>
+            <td>
+                {% if tramo.descuento_adulto_mayor %}
+                    <span class="badge badge-amarillo">-{{ tramo.descuento_adulto_mayor|floatformat:2 }}%</span>
+                {% else %}-{% endif %}
+            </td>
+            <td>
+                <a href="{% url 'editar_tramo' tramo.ciudad_inicial tramo.ciudad_final %}" class="btn btn-ghost btn-sm">✏️ Editar</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">🛣️</div>
+        <p>No se encontraron tramos registrados.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

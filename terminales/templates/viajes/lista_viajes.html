@@ -50,7 +50,7 @@
 </div>
 
 <!-- Modal Crear Viaje -->
-<div id="modalCrearViaje" class="modal-overlay" style="display:none;">
+<div id="modalCrearViaje" class="modal-overlay" style="display: {% if form.errors %}flex{% else %}none{% endif %};">
     <div class="modal-box">
         <div class="modal-header">
             <h3>Crear Viaje</h3>

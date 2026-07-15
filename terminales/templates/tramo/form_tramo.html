@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} — TransBus{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'lista_tramos' %}" class="btn btn-ghost">← Volver</a>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:600px;">
+    <div class="card-title" style="margin-bottom:24px;">🗺️ {{ titulo }}</div>
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {{ form.non_field_errors.0 }}
+        </div>
+        {% endif %}
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>{{ form.ciudad_inicial.label }}</label>
+                {{ form.ciudad_inicial }}
+                {% if form.ciudad_inicial.errors %}
+                    <p class="form-error" style="color: var(--rojo); font-size: 12px; margin-top: 4px;">{{ form.ciudad_inicial.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label>{{ form.ciudad_final.label }}</label>
+                {{ form.ciudad_final }}
+                {% if form.ciudad_final.errors %}
+                    <p class="form-error" style="color: var(--rojo); font-size: 12px; margin-top: 4px;">{{ form.ciudad_final.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{ form.precio.label }}</label>
+            {{ form.precio }}
+            {% if form.precio.errors %}
+                <p class="form-error" style="color: var(--rojo); font-size: 12px; margin-top: 4px;">{{ form.precio.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>{{ form.descuento_estudiante.label }}</label>
+                {{ form.descuento_estudiante }}
+                {% if form.descuento_estudiante.errors %}
+                    <p class="form-error" style="color: var(--rojo); font-size: 12px; margin-top: 4px;">{{ form.descuento_estudiante.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label>{{ form.descuento_adulto_mayor.label }}</label>
+                {{ form.descuento_adulto_mayor }}
+                {% if form.descuento_adulto_mayor.errors %}
+                    <p class="form-error" style="color: var(--rojo); font-size: 12px; margin-top: 4px;">{{ form.descuento_adulto_mayor.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="submit" class="btn btn-primary" style="flex:1;">Guardar Tramo →</button>
+            <a href="{% url 'lista_tramos' %}" class="btn btn-ghost">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

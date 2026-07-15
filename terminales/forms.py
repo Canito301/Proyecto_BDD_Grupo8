@@ -1,7 +1,6 @@
 from django import forms
-from .models import Terminal, Bus, Usuario, Chofer, Administrativo
-from .models import Terminal, Bus, Usuario, Chofer, Administrativo, Viaje #AGREGUE ESTO
-from .models import Terminal, Bus, Usuario, Chofer, Administrativo, Viaje, Boleto
+from django.utils import timezone 
+from .models import Terminal, Bus, Usuario, Chofer, Administrativo, Viaje, Boleto, Tramo
 
 class LoginForm(forms.Form):
     username = forms.CharField(
@@ -287,6 +286,15 @@ class ViajeForm(forms.ModelForm):
             ),
         }
 
+    def clean_fecha_hora_inicio(self):
+        fecha_ingresada = self.cleaned_data.get('fecha_hora_inicio')
+
+        if fecha_ingresada:
+            if fecha_ingresada < timezone.now():
+                raise forms.ValidationError("No puedes programar un viaje para una fecha y hora en el pasado.")
+
+        return fecha_ingresada
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['id_bus'].queryset = Bus.objects.all().order_by('patente')
@@ -345,3 +353,58 @@ class BoletoForm(forms.ModelForm):
         if num_asiento is not None and num_asiento <= 0:
             raise forms.ValidationError("El número de asiento debe ser mayor a 0.")
         return num_asiento
+    
+
+class TramoForm(forms.ModelForm):
+    class Meta:
+        model = Tramo
+        fields = ['ciudad_inicial', 'ciudad_final', 'precio', 'descuento_estudiante', 'descuento_adulto_mayor']
+        labels = {
+            'ciudad_inicial': 'Ciudad de Origen',
+            'ciudad_final': 'Ciudad de Destino',
+            'precio': 'Precio Base ($)',
+            'descuento_estudiante': 'Descuento Estudiante (Ej: 0.1500 = 15%)',
+            'descuento_adulto_mayor': 'Descuento Adulto Mayor (Ej: 0.5000 = 50%)',
+        }
+
+    def clean_precio(self):
+        precio = self.cleaned_data.get('precio')
+        if precio is not None and precio < 0:
+            raise forms.ValidationError("El precio base debe ser mayor o igual a 0.")
+        return precio
+
+    def clean_descuento_estudiante(self):
+        descuento = self.cleaned_data.get('descuento_estudiante')
+        if descuento is not None:
+            if descuento < 0 or descuento > 1:
+                raise forms.ValidationError("El descuento debe ser un valor decimal entre 0 y 1 (ej: 0.15).")
+        return descuento
+
+    def clean_descuento_adulto_mayor(self):
+        descuento = self.cleaned_data.get('descuento_adulto_mayor')
+        if descuento is not None:
+            if descuento < 0 or descuento > 1:
+                raise forms.ValidationError("El descuento debe ser un valor decimal entre 0 y 1 (ej: 0.50).")
+        return descuento
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        if self.instance and not self.instance._state.adding:
+            self.fields['ciudad_inicial'].disabled = True
+            self.fields['ciudad_final'].disabled = True
+
+    def clean(self):
+        cleaned_data = super().clean()
+        origen = cleaned_data.get('ciudad_inicial')
+        destino = cleaned_data.get('ciudad_final')
+
+        if origen and destino and origen.strip().lower() == destino.strip().lower():
+            raise forms.ValidationError("La ciudad de origen y destino no pueden ser la misma.")
+        
+        # Validar duplicados SOLO si estamos creando uno nuevo
+        if not self.instance.pk:
+            if Tramo.objects.filter(ciudad_inicial=origen, ciudad_final=destino).exists():
+                raise forms.ValidationError(f"El tramo de {origen} a {destino} ya existe en el sistema.")
+
+        return cleaned_data
