@@ -200,7 +200,10 @@ def editar_bus(request, bus_id):
         form.save()
         messages.success(request, f"Bus {bus.patente} actualizado.")
         return redirect('lista_buses')
-    return render(request, 'form.html', {'form': form, 'titulo': f'Editar Bus — {bus.patente}'})
+    return render(request, 'buses/form_buses.html', { 
+        'form': form, 
+        'titulo': f'Editar Bus — {bus.patente}'
+    })
 
 
 # ── Viajes y Asientos ──────────────────────────────────────────────────────────
@@ -403,7 +406,7 @@ def editar_chofer(request, chofer_id):
         return redirect('lista_choferes')
 
     # 4. Si solo está entrando a la página, le mostramos el HTML (podemos reciclar el mismo que usamos para crear)
-    return render(request, 'form_chofer.html', {
+    return render(request, 'chofer/form_chofer.html', {
         'form': form,
         'titulo': f'Editar Chofer — {chofer.rut}'
     })

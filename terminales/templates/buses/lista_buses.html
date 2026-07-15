@@ -32,7 +32,6 @@
                 <th>Kilometraje</th>
                 <th>Terminal Actual</th>
                 <th>Accesibilidad Universal</th>
-                <th>Ultimo Mant.</th>
             </tr>
         </thead>
         <tbody>
@@ -55,10 +54,7 @@
                 {% endif %}
             </td>
 
-            <td>{{ bus.terminal_actual.nombre|default:"—" }}</td>
-            <td style="font-size:13px; color:#718096;">
-                {{ bus.fecha_ultimo_mantenimiento|default:"No registrado" }}
-            </td>
+
             <td>
                 <a href="{% url 'editar_bus' bus.pk %}" class="btn btn-ghost btn-sm">✏️ Editar</a>
             </td>
