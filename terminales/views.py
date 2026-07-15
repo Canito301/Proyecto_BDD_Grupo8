@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Count
 from django.utils import timezone
+from django.db import connection
 from functools import wraps
 from .models import Usuario, Terminal, Bus, Viaje, Asiento, Chofer, Administrativo, Reporte, BusReporte, ChoferReporte, Boleto, Tramo
 from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm, ViajeForm, BoletoForm, TramoForm
@@ -375,18 +376,35 @@ def crear_chofer(request):
 
 @login_required
 def lista_choferes(request):
-    q = request.GET.get('q', '')
-    choferes = Chofer.objects.all()
+    q_rut = request.GET.get('rut', '')
+    q_nombre = request.GET.get('nombre', '')
+    q_fecha_contrato = request.GET.get('fecha_inicio_contrato', '')
 
-    # Si el usuario escribió algo en el buscador, filtramos por RUT o Nombre
-    if q:
-        choferes = choferes.filter(
-            Q(rut__icontains=q) | Q(nombre__icontains=q)
+    param_fecha = q_fecha_contrato if q_fecha_contrato else None
+
+    choferes = []
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM filtrar_choferes(%s, %s, %s);",
+            [q_rut, q_nombre, param_fecha]
         )
+        
+        filas = cursor.fetchall()
+        
+        for fila in filas:
+            choferes.append({
+                'id_chofer': fila[0], # NUEVO: Guardamos el ID interno
+                'rut': fila[1],       # Ahora el RUT es el índice 1
+                'nombre': fila[2],    # El nombre es el índice 2
+                'fecha_inicio_contrato': fila[3] # La fecha es el índice 3
+            })
 
     return render(request, 'chofer/lista_choferes.html', {
         'choferes': choferes,
-        'q': q
+        'q_rut': q_rut,
+        'q_nombre': q_nombre,
+        'q_fecha_contrato': q_fecha_contrato,
     })
 
 @login_required
