@@ -148,27 +148,46 @@ def eliminar_terminal(request, terminal_id):
 
 @login_required
 def lista_buses(request):
-    q = request.GET.get('q', '')
-    accesibilidad = request.GET.get('accesibilidad', '')  # Filtro real de la BD
-    
-    # Traemos los buses con su terminal real asignado de la BD
-    buses = Bus.objects.select_related('id_terminal')
-    
-    # 1. Filtrado por texto (Búsqueda por patente)
-    if q:
-        buses = buses.filter(Q(patente__icontains=q))
+    q_patente = request.GET.get('patente', '')
+    q_accesibilidad = request.GET.get('accesibilidad', '')
+    q_terminal = request.GET.get('terminal', '')
+
+    param_accesibilidad = None
+    if q_accesibilidad == 'true':
+        param_accesibilidad = True
+    elif q_accesibilidad == 'false':
+        param_accesibilidad = False
+
+    param_terminal = int(q_terminal) if q_terminal and q_terminal.isdigit() else None
+
+    buses = []
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM filtrar_buses(%s, %s, %s);",
+            [q_patente, param_accesibilidad, param_terminal]
+        )
         
-    # 2. Filtrado por Accesibilidad Universal (Elemento real de la BD)
-    if accesibilidad:
-        if accesibilidad == 'si':
-            buses = buses.filter(accesibilidad_universal=True)
-        elif accesibilidad == 'no':
-            buses = buses.filter(accesibilidad_universal=False)
-            
+        filas = cursor.fetchall()
+        
+        for fila in filas:
+            buses.append({
+                'id_bus': fila[0],
+                'patente': fila[1],
+                'kilometraje': fila[2],
+                'accesibilidad_universal': fila[3],
+                'id_terminal': fila[4],
+                'terminal_nombre': fila[5] # Viene directo del JOIN de PostgreSQL
+            })
+
+    terminales = Terminal.objects.all().order_by('nombre')
+
     return render(request, 'buses/lista_buses.html', {
         'buses': buses,
-        'q': q,
-        'accesibilidad': accesibilidad,  # Pasamos el filtro aplicado al HTML
+        'terminales': terminales,
+        'q_patente': q_patente,
+        'q_accesibilidad': q_accesibilidad,
+        'q_terminal': q_terminal,
     })
 
 

@@ -4,6 +4,11 @@
 
 {% block content %}
 <div class="card">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+        <a href="{% url 'crear_chofer' %}" class="btn btn-primary" style="background-color: #10b981; border: none;">
+            + Nuevo Chofer
+        </a>
+    </div>
     <form method="get" class="form-grid" style="margin-bottom:20px; background: #f8fafc; padding: 16px; border-radius: 8px;">
         <div class="form-group">
             <label>Buscar por RUT</label>

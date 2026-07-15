@@ -2,26 +2,44 @@
 {% block title %}Buses — TransBus{% endblock %}
 {% block page_title %}Flota de Buses{% endblock %}
 
-{% block topbar_actions %}
-<a href="{% url 'crear_bus' %}" class="btn btn-acento">+ Registrar Bus</a>
-{% endblock %}
-
 {% block content %}
 <div class="card">
-    <form method="get" style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
-        <input type="text" name="q" value="{{ q }}"
-            placeholder="Buscar por patente, marca o modelo..."
-            style="flex:1; min-width:200px; padding:9px 14px; border:1.5px solid #E2E8F0; border-radius:8px; font-size:14px;">
-        <select name="estado" style="padding:9px 14px; border:1.5px solid #E2E8F0; border-radius:8px; font-size:14px;">
-            <option value="">Todos los estados</option>
-            {% for val, label in estados %}
-            <option value="{{ val }}" {% if estado == val %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="btn btn-primary">Buscar</button>
-        {% if q or estado %}
-        <a href="{% url 'buses/lista_buses' %}" class="btn btn-ghost">Limpiar</a>
-        {% endif %}
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+        <a href="{% url 'crear_bus' %}" class="btn btn-primary" style="background-color: #10b981; border: none;">
+            + Nuevo Bus
+        </a>
+    </div>
+    <form method="get" class="form-grid" style="margin-bottom:20px; background: #f8fafc; padding: 16px; border-radius: 8px;">
+        <div class="form-group">
+            <label>Buscar por Patente</label>
+            <input type="text" name="patente" value="{{ q_patente }}" placeholder="Ej: AUXX-90">
+        </div>
+        
+        <div class="form-group">
+            <label>Accesibilidad Universal</label>
+            <select name="accesibilidad">
+                <option value="">Todos los estados</option>
+                <option value="true" {% if q_accesibilidad == "true" %}selected{% endif %}>Con Accesibilidad (Sí)</option>
+                <option value="false" {% if q_accesibilidad == "false" %}selected{% endif %}>Sin Accesibilidad (No)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Terminal Actual</label>
+            <select name="terminal">
+                <option value="">Todos los terminales</option>
+                {% for term in terminales %}
+                    <option value="{{ term.id_terminal }}" {% if q_terminal == term.id_terminal|stringformat:"i" %}selected{% endif %}>
+                        {{ term.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            <a href="{% url 'lista_buses' %}" class="btn btn-ghost">Limpiar Filtros</a>
+        </div>
     </form>
 
     {% if buses %}
@@ -32,31 +50,30 @@
                 <th>Kilometraje</th>
                 <th>Terminal Actual</th>
                 <th>Accesibilidad Universal</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
         {% for bus in buses %}
         <tr>
             <td><strong>{{ bus.patente }}</strong></td>
-            <td>{{ bus.kilometraje }} </strong></td>
+            <td>{{ bus.kilometraje|default:"0" }} km</td>
             <td>
-                {% if bus.id_terminal %}
-                    <span class="badge badge-azul">En {{ bus.id_terminal.nombre }}</span>
+                {% if bus.terminal_nombre %}
+                    En Terminal {{ bus.terminal_nombre }}
                 {% else %}
-                    <span class="badge badge-verde">En Ruta</span>
+                    <span style="color: #94a3b8;">No asignado</span>
                 {% endif %}
             </td>
             <td>
                 {% if bus.accesibilidad_universal %}
-                    <span class="badge badge-verde">Sí</span>
+                    <span style="background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">SÍ</span>
                 {% else %}
-                    <span class="badge badge-rojo">No</span>
+                    <span style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">NO</span>
                 {% endif %}
             </td>
-
-
             <td>
-                <a href="{% url 'editar_bus' bus.pk %}" class="btn btn-ghost btn-sm">✏️ Editar</a>
+                <a href="{% url 'editar_bus' bus.id_bus %}" class="btn btn-ghost btn-sm">✏️ Editar</a>
             </td>
         </tr>
         {% endfor %}
@@ -65,7 +82,7 @@
     {% else %}
     <div class="empty-state">
         <div class="icon">🚌</div>
-        <p>No se encontraron buses{% if q %} para "{{ q }}"{% endif %}.</p>
+        <p>No se encontraron buses con esos parámetros de búsqueda.</p>
     </div>
     {% endif %}
 </div>
