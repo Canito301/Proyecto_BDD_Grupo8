@@ -37,7 +37,7 @@ class Terminal(models.Model):
 class Bus(models.Model):
     # Definimos explícitamente la llave primaria real de la base de datos
     id_bus = models.AutoField(primary_key=True) 
-    patente = models.CharField(max_length=8)  # max_length=8 en SQL 
+    patente = models.CharField(max_length=8, unique=True)  # max_length=8 en SQL 
     accesibilidad_universal = models.BooleanField()
     kilometraje = models.IntegerField(null=True, blank=True)
     

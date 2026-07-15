@@ -63,6 +63,12 @@ class BusForm(forms.ModelForm):
             self.fields['id_terminal'].queryset = Terminal.objects.all()
             self.fields['id_terminal'].empty_label = "Sin terminal asignado (en ruta)"
 
+    def clean_patente(self):
+        patente = self.cleaned_data.get('patente')
+        if patente and Bus.objects.filter(patente=patente).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Ya existe un bus con esta patente registrado en el sistema.")
+        return patente
+
 
 class ReporteForm(forms.Form):
     TIPOS_REPORTE = [
