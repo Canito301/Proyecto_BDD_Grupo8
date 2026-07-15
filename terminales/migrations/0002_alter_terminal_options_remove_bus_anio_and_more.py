@@ -83,6 +83,11 @@ class Migration(migrations.Migration):
             field=models.AutoField(primary_key=True, serialize=False),
         ),
         migrations.AddField(
+            model_name='terminal',
+            name='id_terminal',
+            field=models.AutoField(primary_key=True, serialize=False),
+        ),
+        migrations.AddField(
             model_name='bus',
             name='id_terminal',
             field=models.ForeignKey(blank=True, db_column='id_terminal', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='buses', to='terminales.terminal'),
@@ -95,13 +100,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='terminal',
             name='capacidad_buses',
-            field=models.CharField(default='0', max_length=150),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='terminal',
-            name='id_terminal',
-            field=models.AutoField(primary_key=True, serialize=False),
+            field=models.CharField(max_length=150),
         ),
         migrations.AlterField(
             model_name='bus',

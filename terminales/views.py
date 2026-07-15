@@ -230,8 +230,31 @@ def reservar_asiento(request, viaje_id, num_asiento):
             tramo_viaje = TramoViaje.objects.filter(id_viaje=viaje).first()
             
             if not tramo_viaje:
-                messages.error(request, "Este viaje no tiene un tramo asignado. No se puede generar el boleto.")
-                return redirect('disponibilidad_asientos', viaje_id=viaje_id)
+                # Intentar deducir y crear el TramoViaje si no existe
+                def get_ciudad(nombre_terminal):
+                    nom = nombre_terminal.lower()
+                    if 'collao' in nom: return 'Concepción'
+                    if 'santa juana' in nom: return 'Santa Juana'
+                    if 'san pedro' in nom: return 'San Pedro de la Paz'
+                    if 'coronel' in nom: return 'Coronel'
+                    if 'hualp' in nom: return 'Hualpén'
+                    return nombre_terminal
+
+                c_ini = get_ciudad(viaje.id_terminal_inicio.nombre)
+                c_fin = get_ciudad(viaje.id_terminal_final.nombre)
+                
+                # Verificar que el tramo tarifario exista
+                tramo_existente = Tramo.objects.filter(ciudad_inicial__iexact=c_ini, ciudad_final__iexact=c_fin).first()
+                if not tramo_existente:
+                    messages.error(request, f"Este viaje no tiene un tramo asignado y no existe una tarifa configurada entre {c_ini} y {c_fin}. No se puede generar el boleto.")
+                    return redirect('disponibilidad_asientos', viaje_id=viaje_id)
+                
+                # Crear la relación automáticamente
+                tramo_viaje = TramoViaje.objects.create(
+                    ciudad_inicial=tramo_existente.ciudad_inicial,
+                    ciudad_final=tramo_existente.ciudad_final,
+                    id_viaje=viaje
+                )
             
             try:
                 # 1. Crear el boleto automáticamente
