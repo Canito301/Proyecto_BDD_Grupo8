@@ -593,28 +593,39 @@ def crear_boleto(request):
 
 @login_required
 def lista_tramos(request):
-    origen = request.GET.get('origen', '')
-    destino = request.GET.get('destino', '')
-    precio_min = request.GET.get('precio_min', '')
-    precio_max = request.GET.get('precio_max', '')
+    q_origen = request.GET.get('origen', '')
+    q_destino = request.GET.get('destino', '')
+    q_precio_min = request.GET.get('precio_min', '')
+    q_precio_max = request.GET.get('precio_max', '')
 
-    tramos = Tramo.objects.all().order_by('ciudad_inicial', 'ciudad_final')
+    param_precio_min = int(q_precio_min) if q_precio_min and q_precio_min.isdigit() else None
+    param_precio_max = int(q_precio_max) if q_precio_max and q_precio_max.isdigit() else None
 
-    if origen:
-        tramos = tramos.filter(ciudad_inicial__icontains=origen)
-    if destino:
-        tramos = tramos.filter(ciudad_final__icontains=destino)
-    if precio_min:
-        tramos = tramos.filter(precio__gte=precio_min) # gte = Greater Than or Equal (Mayor o igual)
-    if precio_max:
-        tramos = tramos.filter(precio__lte=precio_max) # lte = Less Than or Equal (Menor o igual)
+    tramos = []
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM filtrar_tramos(%s, %s, %s, %s);",
+            [q_origen, q_destino, param_precio_min, param_precio_max]
+        )
+        
+        filas = cursor.fetchall()
+        
+        for fila in filas:
+            tramos.append({
+                'ciudad_inicial': fila[0],
+                'ciudad_final': fila[1],
+                'precio': fila[2],
+                'descuento_estudiante': fila[3],
+                'descuento_adulto_mayor': fila[4]
+            })
 
     return render(request, 'tramo/lista_tramos.html', {
         'tramos': tramos,
-        'origen': origen,
-        'destino': destino,
-        'precio_min': precio_min,
-        'precio_max': precio_max,
+        'origen': q_origen,
+        'destino': q_destino,
+        'precio_min': q_precio_min,
+        'precio_max': q_precio_max,
     })
 
 @login_required

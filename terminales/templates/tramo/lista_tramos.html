@@ -1,10 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Tramos — TransBus{% endblock %}
-{% block page_title %}Gestión de Tramos y Tarifas{% endblock %}
-
-{% block topbar_actions %}
-<a href="{% url 'crear_tramo' %}" class="btn btn-acento">+ Nuevo Tramo</a>
-{% endblock %}
+{% block page_title %}Administración de Tramos{% endblock %}
 
 {% block content %}
 <div class="card">
@@ -27,8 +23,8 @@
         </div>
         
         <div style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 10px;">
-            <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
-            <a href="{% url 'lista_tramos' %}" class="btn btn-ghost">Limpiar</a>
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            <a href="{% url 'lista_tramos' %}" class="btn btn-ghost">Limpiar Filtros</a>
         </div>
     </form>
 
@@ -36,11 +32,11 @@
     <table>
         <thead>
             <tr>
-                <th>Origen</th>
-                <th>Destino</th>
+                <th>Ciudad Inicial</th>
+                <th>Ciudad Final</th>
                 <th>Precio Base</th>
-                <th>Dcto. Estudiante</th>
-                <th>Dcto. Adulto Mayor</th>
+                <th>Descuento Estudiante</th>
+                <th>Descuento Adulto Mayor</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -48,18 +44,10 @@
         {% for tramo in tramos %}
         <tr>
             <td><strong>{{ tramo.ciudad_inicial }}</strong></td>
-            <td><strong>{{ tramo.ciudad_final }}</strong></td>
-            <td style="color:var(--verde); font-weight:600;">${{ tramo.precio }}</td>
-            <td>
-                {% if tramo.descuento_estudiante %}
-                    <span class="badge badge-azul">-{{ tramo.descuento_estudiante|floatformat:2 }}%</span>
-                {% else %}-{% endif %}
-            </td>
-            <td>
-                {% if tramo.descuento_adulto_mayor %}
-                    <span class="badge badge-amarillo">-{{ tramo.descuento_adulto_mayor|floatformat:2 }}%</span>
-                {% else %}-{% endif %}
-            </td>
+            <td>{{ tramo.ciudad_final }}</td>
+            <td>${{ tramo.precio }}</td>
+            <td>{{ tramo.descuento_estudiante|default:"0" }}%</td>
+            <td>{{ tramo.descuento_adulto_mayor|default:"0" }}%</td>
             <td>
                 <a href="{% url 'editar_tramo' tramo.ciudad_inicial tramo.ciudad_final %}" class="btn btn-ghost btn-sm">✏️ Editar</a>
             </td>
@@ -69,8 +57,8 @@
     </table>
     {% else %}
     <div class="empty-state">
-        <div class="icon">🛣️</div>
-        <p>No se encontraron tramos registrados.</p>
+        <div class="icon">🗺️</div>
+        <p>No se encontraron tramos registrados con esos parámetros.</p>
     </div>
     {% endif %}
 </div>
