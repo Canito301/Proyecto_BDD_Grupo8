@@ -178,3 +178,18 @@ class Tramo(models.Model):
     class Meta:
         db_table = 'tramo'
         managed = False 
+
+
+class TramoViaje(models.Model):
+    pk = models.CompositePrimaryKey('ciudad_inicial', 'ciudad_final', 'id_viaje')
+    ciudad_inicial = models.CharField(max_length=50)
+    ciudad_final = models.CharField(max_length=50)
+    id_viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, db_column='id_viaje')
+
+    class Meta:
+        db_table = 'tramo_viaje'
+        managed = False
+        unique_together = (('ciudad_inicial', 'ciudad_final', 'id_viaje'),)
+
+    def __str__(self):
+        return f"{self.ciudad_inicial} → {self.ciudad_final} (Viaje #{self.id_viaje_id})"

@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import timezone 
-from .models import Terminal, Bus, Usuario, Chofer, Administrativo, Viaje, Boleto, Tramo
+from .models import Terminal, Bus, Usuario, Chofer, Administrativo, Viaje, Boleto, Tramo, TramoViaje
 
 class LoginForm(forms.Form):
     username = forms.CharField(
@@ -359,6 +359,25 @@ class BoletoForm(forms.ModelForm):
         if num_asiento is not None and num_asiento <= 0:
             raise forms.ValidationError("El número de asiento debe ser mayor a 0.")
         return num_asiento
+
+    def clean(self):
+        cleaned_data = super().clean()
+        ciudad_inicial = cleaned_data.get('ciudad_inicial')
+        ciudad_final = cleaned_data.get('ciudad_final')
+        viaje = cleaned_data.get('id_viaje')
+
+        if ciudad_inicial and ciudad_final and viaje:
+            existe = TramoViaje.objects.filter(
+                ciudad_inicial=ciudad_inicial,
+                ciudad_final=ciudad_final,
+                id_viaje=viaje
+            ).exists()
+            if not existe:
+                raise forms.ValidationError(
+                    f"El tramo '{ciudad_inicial} → {ciudad_final}' no está asociado al viaje seleccionado. "
+                    f"Verifique que las ciudades correspondan a un tramo válido para este viaje."
+                )
+        return cleaned_data
     
 
 class TramoForm(forms.ModelForm):

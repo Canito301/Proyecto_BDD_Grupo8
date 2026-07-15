@@ -87,6 +87,51 @@
         height: 20px;
         border-radius: 4px;
     }
+
+    /* ── Modal ── */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.active {
+        display: flex;
+    }
+    .modal-box {
+        background: white;
+        border-radius: 16px;
+        padding: 28px 32px;
+        width: 380px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        animation: modalIn 0.2s ease-out;
+    }
+    @keyframes modalIn {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    .modal-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    .modal-subtitle {
+        font-size: 13px;
+        color: var(--gris-600);
+        margin-bottom: 20px;
+    }
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--gris-200);
+    }
 </style>
 {% endblock %}
 
@@ -136,12 +181,10 @@
             <div class="seats-grid">
                 {% for asiento in asientos %}
                     {% if asiento.estado %}
-                        <form action="{% url 'reservar_asiento' viaje.id_viaje asiento.num_asiento %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="seat seat-available" onclick="return confirm('¿Confirmas la reserva del asiento {{ asiento.num_asiento }}?');">
-                                {{ asiento.num_asiento }}
-                            </button>
-                        </form>
+                        <button type="button" class="seat seat-available"
+                                onclick="abrirModal({{ asiento.num_asiento }})">
+                            {{ asiento.num_asiento }}
+                        </button>
                     {% else %}
                         <div class="seat seat-occupied" title="Ocupado">
                             {{ asiento.num_asiento }}
@@ -165,4 +208,53 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para seleccionar tipo de boleto -->
+<div class="modal-overlay" id="modalBoleto">
+    <div class="modal-box">
+        <div class="modal-title">🎫 Generar Boleto</div>
+        <div class="modal-subtitle">
+            Asiento <strong id="modalNumAsiento"></strong> — Seleccione el tipo de boleto
+        </div>
+
+        <form id="formReserva" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="tipo_boleto">Tipo de Boleto</label>
+                <select name="tipo_boleto" id="tipo_boleto">
+                    <option value="Normal">Normal</option>
+                    <option value="Estudiante">Estudiante</option>
+                    <option value="Adulto Mayor">Adulto Mayor</option>
+                    <option value="Discapacidad">Discapacidad</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Confirmar Reserva</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function abrirModal(numAsiento) {
+        document.getElementById('modalNumAsiento').textContent = numAsiento;
+        // Construir la URL de reserva dinámicamente
+        document.getElementById('formReserva').action = 
+            "{% url 'reservar_asiento' viaje.id_viaje 0 %}".replace('/0/', '/' + numAsiento + '/');
+        document.getElementById('modalBoleto').classList.add('active');
+    }
+
+    function cerrarModal() {
+        document.getElementById('modalBoleto').classList.remove('active');
+    }
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('modalBoleto').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModal();
+    });
+</script>
 {% endblock %}

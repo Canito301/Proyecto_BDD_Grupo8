@@ -6,7 +6,7 @@ from django.db.models import Q, Count
 from django.utils import timezone
 from django.db import connection
 from functools import wraps
-from .models import Usuario, Terminal, Bus, Viaje, Asiento, Chofer, Administrativo, Reporte, BusReporte, ChoferReporte, Boleto, Tramo
+from .models import Usuario, Terminal, Bus, Viaje, Asiento, Chofer, Administrativo, Reporte, BusReporte, ChoferReporte, Boleto, Tramo, TramoViaje
 from .forms import LoginForm, TerminalForm, BusForm, ChoferForm, AdministrativoForm, ReporteForm, ViajeForm, BoletoForm, TramoForm
 
 def rol_requerido(*roles):
@@ -222,13 +222,37 @@ def disponibilidad_asientos(request, viaje_id):
 def reservar_asiento(request, viaje_id, num_asiento):
     if request.method == 'POST':
         viaje = get_object_or_404(Viaje, pk=viaje_id)
-        # Asiento específico del bus asignado al viaje
         asiento = get_object_or_404(Asiento, id_bus=viaje.id_bus_id, num_asiento=num_asiento)
+        tipo_boleto = request.POST.get('tipo_boleto', 'Normal')
         
-        if asiento.estado: # Si está disponible
-            # Usamos update() con ambos campos para la PK compuesta
-            Asiento.objects.filter(id_bus=viaje.id_bus_id, num_asiento=num_asiento).update(estado=False)
-            messages.success(request, f"¡Asiento {num_asiento} reservado exitosamente!")
+        if asiento.estado:  # Si está disponible
+            # Obtener las ciudades del tramo vinculado a este viaje
+            tramo_viaje = TramoViaje.objects.filter(id_viaje=viaje).first()
+            
+            if not tramo_viaje:
+                messages.error(request, "Este viaje no tiene un tramo asignado. No se puede generar el boleto.")
+                return redirect('disponibilidad_asientos', viaje_id=viaje_id)
+            
+            try:
+                # 1. Crear el boleto automáticamente
+                boleto = Boleto.objects.create(
+                    tipo_boleto=tipo_boleto,
+                    num_asiento=num_asiento,
+                    ciudad_inicial=tramo_viaje.ciudad_inicial,
+                    ciudad_final=tramo_viaje.ciudad_final,
+                    id_viaje=viaje,
+                )
+                
+                # 2. Marcar el asiento como ocupado
+                Asiento.objects.filter(id_bus=viaje.id_bus_id, num_asiento=num_asiento).update(estado=False)
+                
+                messages.success(
+                    request,
+                    f"¡Asiento {num_asiento} reservado! Boleto #{boleto.id_boleto} generado "
+                    f"({tipo_boleto} — {tramo_viaje.ciudad_inicial} → {tramo_viaje.ciudad_final})."
+                )
+            except Exception as e:
+                messages.error(request, f"Error al generar el boleto: {str(e)}")
         else:
             messages.error(request, f"El asiento {num_asiento} ya se encuentra ocupado.")
             
