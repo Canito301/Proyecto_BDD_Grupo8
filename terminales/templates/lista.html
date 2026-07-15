@@ -34,7 +34,7 @@
             </td>
             <td style="display:flex; gap:6px;">
                 <a href="{% url 'detalle_terminal' t.pk %}" class="btn btn-ghost btn-sm">Ver</a>
-                <a href="{% url 'editar_terminal' t.pk %}" class="btn btn-primary btn-sm">Editar</a>
+
                 {% if user.rol == 'superadmin' or user.is_superuser %}
                 <a href="{% url 'eliminar_terminal' t.pk %}" class="btn btn-danger btn-sm"
                    onclick="return confirm('¿Desactivar terminal {{ t.nombre }}?')">Desactivar</a>

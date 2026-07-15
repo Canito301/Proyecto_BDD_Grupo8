@@ -131,16 +131,7 @@ def crear_terminal(request):
     return render(request, 'crear_terminal.html', {'form': form, 'titulo': 'Nuevo Terminal'})
 
 
-@login_required
-@rol_requerido('superadmin', 'administrativo')
-def editar_terminal(request, terminal_id):
-    terminal = get_object_or_404(Terminal, pk=terminal_id)
-    form = TerminalForm(request.POST or None, instance=terminal)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        messages.success(request, f"Terminal '{terminal.nombre}' actualizado.")
-        return redirect('detalle_terminal', terminal_id=terminal.pk)
-    return render(request, 'form.html', {'form': form, 'titulo': f'Editar — {terminal.nombre}'})
+
 
 
 @login_required
@@ -316,6 +307,30 @@ def desvincular_bus(request, bus_id):
 
 
 
+
+@login_required
+def lista_reportes(request):
+    q = request.GET.get('q', '')
+    reportes = Reporte.objects.select_related('id_admin').all().order_by('-fecha_hora')
+
+    if q:
+        reportes = reportes.filter(
+            Q(tipo__icontains=q) | Q(descripcion__icontains=q)
+        )
+
+    # Para cada reporte, traer bus y chofer vinculados
+    for reporte in reportes:
+        bus_reporte = BusReporte.objects.filter(id_reporte=reporte).select_related('id_bus').first()
+        chofer_reporte = ChoferReporte.objects.filter(id_reporte=reporte).select_related('id_chofer').first()
+        reporte.bus_vinculado = bus_reporte.id_bus if bus_reporte else None
+        reporte.chofer_vinculado = chofer_reporte.id_chofer if chofer_reporte else None
+
+    return render(request, 'reportes/lista_reportes.html', {
+        'reportes': reportes,
+        'q': q
+    })
+
+
 @login_required
 def crear_reporte(request):
     if request.method == 'POST':
@@ -351,7 +366,7 @@ def crear_reporte(request):
                     ChoferReporte.objects.create(id_reporte=nuevo_reporte, id_chofer=chofer)
 
                 messages.success(request, f"El reporte #{nuevo_reporte.id_reporte} ha sido registrado exitosamente.")
-                return redirect('dashboard')
+                return redirect('lista_reportes')
 
             except Exception as e:
                 messages.error(request, f"Hubo un error al guardar en la base de datos: {str(e)}")
