@@ -12,6 +12,42 @@
         </button>
     </div>
 
+    <form method="get" class="form-grid" style="margin-bottom:20px; background: #f8fafc; padding: 16px; border-radius: 8px; margin-top: 15px;">
+        <div class="form-group">
+            <label>Fecha de Salida</label>
+            <input type="date" name="fecha" value="{{ q_fecha }}">
+        </div>
+
+        <div class="form-group">
+            <label>Terminal Origen</label>
+            <select name="origen">
+                <option value="">Cualquier origen</option>
+                {% for term in terminales %}
+                    <option value="{{ term.id_terminal }}" {% if q_origen == term.id_terminal|stringformat:"i" %}selected{% endif %}>
+                        {{ term.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Terminal Destino</label>
+            <select name="destino">
+                <option value="">Cualquier destino</option>
+                {% for term in terminales %}
+                    <option value="{{ term.id_terminal }}" {% if q_destino == term.id_terminal|stringformat:"i" %}selected{% endif %}>
+                        {{ term.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <a href="{% url 'lista_viajes' %}" class="btn btn-ghost">Limpiar Filtros</a>
+        </div>
+    </form>
+
     {% if viajes %}
     <div class="table-responsive">
         <table>
@@ -28,9 +64,13 @@
                 {% for viaje in viajes %}
                 <tr>
                     <td>{{ viaje.fecha_hora_inicio|date:"d/m/Y H:i" }}</td>
-                    <td>{{ viaje.id_terminal_inicio.nombre }}</td>
-                    <td>{{ viaje.id_terminal_final.nombre }}</td>
-                    <td>{{ viaje.id_bus.patente }}</td>
+                    <td>{{ viaje.terminal_inicio_nombre }}</td>
+                    <td>{{ viaje.terminal_final_nombre }}</td>
+                    <td>
+                        <span style="background: #eff6ff; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold;">
+                            {{ viaje.bus_patente }}
+                        </span>
+                    </td>
                     <td>
                         <a href="{% url 'disponibilidad_asientos' viaje.id_viaje %}" class="btn btn-primary btn-sm">
                             <span class="nav-icon">💺</span> Ver Asientos
@@ -49,7 +89,6 @@
     {% endif %}
 </div>
 
-<!-- Modal Crear Viaje -->
 <div id="modalCrearViaje" class="modal-overlay" style="display: {% if form.errors %}flex{% else %}none{% endif %};">
     <div class="modal-box">
         <div class="modal-header">
@@ -191,6 +230,5 @@
     function cerrarModalViaje() {
         document.getElementById('modalCrearViaje').style.display = 'none';
     }
-
 </script>
 {% endblock %}

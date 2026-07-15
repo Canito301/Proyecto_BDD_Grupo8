@@ -221,9 +221,47 @@ def editar_bus(request, bus_id):
 
 @login_required
 def lista_viajes(request):
-    viajes = Viaje.objects.select_related('id_terminal_inicio', 'id_terminal_final', 'id_bus').all().order_by('-fecha_hora_inicio')
-    return render(request, 'viajes/lista_viajes.html', {'viajes': viajes})
+    q_fecha = request.GET.get('fecha', '')
+    q_origen = request.GET.get('origen', '')
+    q_destino = request.GET.get('destino', '')
 
+    param_fecha = q_fecha if q_fecha else None
+    param_origen = int(q_origen) if q_origen and q_origen.isdigit() else None
+    param_destino = int(q_destino) if q_destino and q_destino.isdigit() else None
+
+    viajes = []
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM filtrar_viajes(%s, %s, %s);",
+            [param_fecha, param_origen, param_destino]
+        )
+        
+        filas = cursor.fetchall()
+        
+        for fila in filas:
+            viajes.append({
+                'id_viaje': fila[0],
+                'fecha_hora_inicio': fila[1],
+                'id_chofer': fila[2],
+                'chofer_nombre': fila[3] if fila[3] else "No asignado",
+                'id_bus': fila[4],
+                'bus_patente': fila[5] if fila[5] else "Sin patente",
+                'id_terminal_inicio': fila[6],
+                'terminal_inicio_nombre': fila[7],
+                'id_terminal_final': fila[8],
+                'terminal_final_nombre': fila[9]
+            })
+
+    terminales = Terminal.objects.all().order_by('nombre')
+
+    return render(request, 'viajes/lista_viajes.html', {
+        'viajes': viajes,
+        'terminales': terminales,
+        'q_fecha': q_fecha,
+        'q_origen': q_origen,
+        'q_destino': q_destino,
+    })
 
 @login_required
 def disponibilidad_asientos(request, viaje_id):
